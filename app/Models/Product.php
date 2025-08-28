@@ -16,7 +16,7 @@ class Product extends Model
         'description',
         'price',
         'stock',
-        'image',
+        'weight',
     ];
 
     public function category()
@@ -35,5 +35,10 @@ class Product extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(Image::class);
     }
 }

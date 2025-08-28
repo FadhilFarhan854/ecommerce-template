@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
@@ -33,9 +34,8 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
         
     })->name('dashboard');
-    Route::get('/admin-dashboard', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
+
+    Route::get('/admin-dashboard',[DashboardController::class, 'index'] )->name('admin.dashboard');
 
     // Profile routes
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
@@ -91,6 +91,7 @@ Route::middleware('auth')->group(function () {
 
 // Web routes untuk orders (monolith approach) - requires authentication
 Route::middleware('auth')->resource('orders', OrderController::class);
+Route::middleware('auth')->get('/history', [OrderController::class, 'history'])->name('orders.history');
 
 // Web routes untuk order items (monolith approach) - requires authentication
 Route::middleware('auth')->resource('order-items', OrderItemController::class);

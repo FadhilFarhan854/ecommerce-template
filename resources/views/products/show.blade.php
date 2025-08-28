@@ -15,14 +15,72 @@
         margin-bottom: 2rem;
     }
     .product-gallery {
+        position: relative;
+        background: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+    .main-image-container {
+        position: relative;
         height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         background: #e5e7eb;
+    }
+    .main-image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: 8px;
+    }
+    .image-thumbnails {
+        display: flex;
+        gap: 0.5rem;
+        padding: 1rem;
+        overflow-x: auto;
+        background: #f8f9fa;
+    }
+    .thumbnail {
+        flex-shrink: 0;
+        width: 80px;
+        height: 80px;
+        border-radius: 6px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.3s;
+    }
+    .thumbnail.active {
+        border-color: #3b82f6;
+        transform: scale(1.05);
+    }
+    .thumbnail:hover {
+        border-color: #93c5fd;
+    }
+    .thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .no-image {
         display: flex;
         align-items: center;
         justify-content: center;
         color: #9ca3af;
         font-size: 1.2rem;
         font-weight: 500;
+    }
+    .image-counter {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
     }
     .product-info {
         padding: 2rem;
@@ -218,7 +276,36 @@
 
         <div class="product-detail">
             <div class="product-gallery">
-                <span>Foto Produk</span>
+                @if($product->images && $product->images->count() > 0)
+                    <div class="main-image-container">
+                        <img id="mainImage" src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="main-image">
+                        @if($product->images->count() > 1)
+                            <div class="image-counter">
+                                <span id="currentImageIndex">1</span> / {{ $product->images->count() }}
+                            </div>
+                        @endif
+                    </div>
+                    
+                    @if($product->images->count() > 1)
+                        <div class="image-thumbnails">
+                            @foreach($product->images as $index => $image)
+                                <div class="thumbnail {{ $index === 0 ? 'active' : '' }}" 
+                                     onclick="changeMainImage('{{ $image->url }}', {{ $index + 1 }}, this)">
+                                    <img src="{{ $image->url }}" alt="{{ $product->name }} - Image {{ $index + 1 }}">
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                @else
+                    <div class="main-image-container">
+                        <div class="no-image">
+                            <div class="text-center">
+                                <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                                Foto Produk Tidak Tersedia
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
             
             <div class="product-info">
@@ -265,7 +352,11 @@
                     @foreach($relatedProducts as $relatedProduct)
                         <div class="product-card">
                             <div class="product-image">
-                                <span>Foto Produk</span>
+                                @if($relatedProduct->images && $relatedProduct->images->count() > 0)
+                                    <img src="{{ $relatedProduct->images->first()->url }}" alt="{{ $relatedProduct->name }}" style="height: 150px; max-width: 100%; object-fit: cover; border-radius: 6px;">
+                                @else
+                                    <span>Foto Produk</span>
+                                @endif
                             </div>
                             <div class="card-info">
                                 <h3 class="card-title">{{ $relatedProduct->name }}</h3>
@@ -280,6 +371,92 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function changeMainImage(imageUrl, imageIndex, thumbnailElement) {
+    // Update main image
+    document.getElementById('mainImage').src = imageUrl;
+    
+    // Update counter
+    const counter = document.getElementById('currentImageIndex');
+    if (counter) {
+        counter.textContent = imageIndex;
+    }
+    
+    // Update active thumbnail
+    document.querySelectorAll('.thumbnail').forEach(thumb => thumb.classList.remove('active'));
+    thumbnailElement.classList.add('active');
+}
+
+// Add keyboard navigation
+document.addEventListener('keydown', function(e) {
+    const thumbnails = document.querySelectorAll('.thumbnail');
+    const activeThumbnail = document.querySelector('.thumbnail.active');
+    
+    if (thumbnails.length <= 1) return;
+    
+    let currentIndex = Array.from(thumbnails).indexOf(activeThumbnail);
+    
+    if (e.key === 'ArrowLeft' && currentIndex > 0) {
+        thumbnails[currentIndex - 1].click();
+    } else if (e.key === 'ArrowRight' && currentIndex < thumbnails.length - 1) {
+        thumbnails[currentIndex + 1].click();
+    }
+});
+
+// Add click to zoom functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const mainImage = document.getElementById('mainImage');
+    if (mainImage) {
+        mainImage.style.cursor = 'zoom-in';
+        mainImage.addEventListener('click', function() {
+            // Create modal for zoomed image
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                cursor: zoom-out;
+            `;
+            
+            const zoomedImage = document.createElement('img');
+            zoomedImage.src = this.src;
+            zoomedImage.style.cssText = `
+                max-width: 95%;
+                max-height: 95%;
+                object-fit: contain;
+                border-radius: 8px;
+            `;
+            
+            modal.appendChild(zoomedImage);
+            document.body.appendChild(modal);
+            
+            // Close on click
+            modal.addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+            
+            // Close on escape key
+            const closeOnEscape = function(e) {
+                if (e.key === 'Escape') {
+                    document.body.removeChild(modal);
+                    document.removeEventListener('keydown', closeOnEscape);
+                }
+            };
+            document.addEventListener('keydown', closeOnEscape);
+        });
+    }
+});
+</script>
+@endpush
                                         <td><code>{{ $product->slug }}</code></td>
                                     </tr>
                                     <tr>

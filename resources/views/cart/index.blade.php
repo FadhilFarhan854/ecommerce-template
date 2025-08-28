@@ -30,9 +30,17 @@
                                 <div class="flex items-center space-x-4">
                                     <!-- Product Image -->
                                     <div class="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
-                                        <img src="{{ $item->product->image }}" 
-                                             alt="{{ $item->product->name }}" 
-                                             class="w-full h-full object-cover">
+                                        @if($item->product->images->count() > 0)
+                                            <img src="{{ $item->product->images->first()->url }}" 
+                                                 alt="{{ $item->product->name }}" 
+                                                 class="w-full h-full object-cover">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 16m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </div>
+                                        @endif
                                     </div>
                                     
                                     <!-- Product Details -->
@@ -50,7 +58,7 @@
                                     
                                     <!-- Quantity Controls -->
                                     <div class="flex items-center space-x-2">
-                                        <button onclick="updateQuantity({{ $item->id }}, {{ $item->quantity - 1 }})"
+                                        <button onclick="decreaseQuantity({{ $item->id }})"
                                                 class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition"
                                                 {{ $item->quantity <= 1 ? 'disabled' : '' }}>
                                             <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +70,7 @@
                                             {{ $item->quantity }}
                                         </span>
                                         
-                                        <button onclick="updateQuantity({{ $item->id }}, {{ $item->quantity + 1 }})"
+                                        <button onclick="increaseQuantity({{ $item->id }})"
                                                 class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition"
                                                 {{ $item->quantity >= $item->product->stock ? 'disabled' : '' }}>
                                             <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,6 +256,18 @@
     }
     
     // Cart functions
+    async function increaseQuantity(cartId) {
+        const currentQuantity = parseInt(document.getElementById(`quantity-${cartId}`).textContent);
+        await updateQuantity(cartId, currentQuantity + 1);
+    }
+    
+    async function decreaseQuantity(cartId) {
+        const currentQuantity = parseInt(document.getElementById(`quantity-${cartId}`).textContent);
+        if (currentQuantity > 1) {
+            await updateQuantity(cartId, currentQuantity - 1);
+        }
+    }
+    
     async function updateQuantity(cartId, newQuantity) {
         if (newQuantity < 1) return;
         
@@ -274,6 +294,9 @@
                 // Update quantity display
                 document.getElementById(`quantity-${cartId}`).textContent = newQuantity;
                 
+                // Update button states
+                updateButtonStates(cartId, newQuantity, data.data.product.stock);
+                
                 // Recalculate totals
                 await recalculateTotals();
                 
@@ -282,9 +305,33 @@
                 showToast(data.message || 'Terjadi kesalahan', 'error');
             }
         } catch (error) {
+            console.error('Error updating quantity:', error);
             showToast('Terjadi kesalahan jaringan', 'error');
         } finally {
             hideLoading();
+        }
+    }
+    
+    function updateButtonStates(cartId, quantity, stock) {
+        const decreaseBtn = document.querySelector(`[onclick="decreaseQuantity(${cartId})"]`);
+        const increaseBtn = document.querySelector(`[onclick="increaseQuantity(${cartId})"]`);
+        
+        // Update decrease button state
+        if (quantity <= 1) {
+            decreaseBtn.disabled = true;
+            decreaseBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            decreaseBtn.disabled = false;
+            decreaseBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        
+        // Update increase button state
+        if (quantity >= stock) {
+            increaseBtn.disabled = true;
+            increaseBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            increaseBtn.disabled = false;
+            increaseBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     }
     

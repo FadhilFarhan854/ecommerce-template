@@ -69,8 +69,8 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @foreach($products as $product)
                             <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-200 flex flex-col">
-                                @if($product->image)
-                                    <img src="{{ $product->image }}" class="w-full h-48 object-cover rounded-t-lg" alt="{{ $product->name }}">
+                                @if($product->images && $product->images->count() > 0)
+                                    <img src="{{ $product->images->first()->url }}" class="w-full h-48 object-cover rounded-t-lg" alt="{{ $product->name }}">
                                 @else
                                     <div class="w-full h-48 bg-gray-100 rounded-t-lg flex items-center justify-center">
                                         <span class="text-gray-500">No Image</span>
@@ -110,7 +110,7 @@
                     </div>
 
                     {{-- Pagination --}}
-                    <div class="flex justify-center mt-6">
+                    <div class="flex gap-2 justify-center mt-6">
                         {{ $products->links() }}
                     </div>
                 @else

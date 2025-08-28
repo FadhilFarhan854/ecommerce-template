@@ -78,7 +78,7 @@
 
     @if($products->count() > 0)
         <!-- Results Info -->
-        <div class="text-center text-gray-500 mb-4">
+        <div class="text-center text-gray-500 mb-8 mt-12">
             Menampilkan {{ $products->firstItem() }} - {{ $products->lastItem() }} dari {{ $products->total() }} produk
         </div>
 
@@ -87,7 +87,18 @@
             @foreach($products as $product)
                 <div class="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden">
                     <div class="h-52 bg-gray-100 flex items-center justify-center">
-                        <img src="{{ $product->image }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                        @if($product->images && $product->images->count() > 0)
+                            <img src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                        @elseif($product->image)
+                            <img src="{{ $product->image }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                        @else
+                            <div class="flex flex-col items-center justify-center text-gray-400">
+                                <svg class="w-16 h-16 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="text-sm">No Image</span>
+                            </div>
+                        @endif
                     </div>
                     <div class="p-4">
                         <div class="text-xs uppercase tracking-wide text-gray-500 mb-1">
@@ -121,7 +132,7 @@
         </div>
 
         <!-- Pagination -->
-        <div class="mt-8 flex justify-center">
+        <div class="mt-10 mb-8 flex justify-center">
             {{ $products->appends(request()->query())->links() }}
         </div>
     @else
@@ -151,9 +162,36 @@
             <!-- Modal Body -->
             <div class="p-6">
                 <div class="grid md:grid-cols-2 gap-6">
-                    <!-- Product Image -->
-                    <div class="h-80 bg-gray-100 flex items-center justify-center rounded-lg overflow-hidden">
-                        <img src="{{ $product->image }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                    <!-- Product Image Gallery -->
+                    <div class="space-y-4">
+                        <!-- Main Image -->
+                        <div class="h-80 bg-gray-100 flex items-center justify-center rounded-lg overflow-hidden">
+                            @if($product->images && $product->images->count() > 0)
+                                <img id="main-image-{{ $product->id }}" src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                            @elseif($product->image)
+                                <img id="main-image-{{ $product->id }}" src="{{ $product->image }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                            @else
+                                <div class="flex flex-col items-center justify-center text-gray-400 h-full">
+                                    <svg class="w-20 h-20 mb-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-lg">No Image Available</span>
+                                </div>
+                            @endif
+                        </div>
+                        
+                        <!-- Thumbnail Images -->
+                        @if($product->images && $product->images->count() > 1)
+                            <div class="flex space-x-2 overflow-x-auto pb-2">
+                                @foreach($product->images as $index => $image)
+                                    <div class="flex-shrink-0">
+                                        <img src="{{ $image->url }}" alt="{{ $product->name }}" 
+                                             onclick="changeMainImage('{{ $product->id }}', '{{ $image->url }}', {{ $index }})"
+                                             class="w-16 h-16 object-cover rounded-lg cursor-pointer border-2 {{ $index === 0 ? 'border-blue-500' : 'border-gray-200' }} hover:border-blue-400 transition-colors thumbnail-{{ $product->id }}">
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                     
                     <!-- Product Details -->
@@ -176,7 +214,22 @@
                             </div>
                         @endif
                         
-                        <p class="text-gray-600 leading-relaxed">{{ $product->description }}</p>
+                        @if($product->weight)
+                            <div class="text-sm text-gray-600">
+                                Berat: <span class="font-semibold">{{ $product->weight }} gram</span>
+                            </div>
+                        @endif
+                        
+                        <div class="border-t pt-4">
+                            <h4 class="font-semibold text-gray-800 mb-2">Deskripsi Produk</h4>
+                            <p class="text-gray-600 leading-relaxed">{{ $product->description }}</p>
+                        </div>
+                        
+                        @if($product->images && $product->images->count() > 1)
+                            <div class="text-sm text-gray-500">
+                                <span class="font-medium">{{ $product->images->count() }}</span> foto tersedia
+                            </div>
+                        @endif
                         
                         @auth
                             @if($product->stock > 0)
@@ -257,6 +310,26 @@
             document.body.style.overflow = 'auto';
         }
     });
+    
+    // Image gallery functions
+    function changeMainImage(productId, imageUrl, index) {
+        const mainImage = document.getElementById('main-image-' + productId);
+        const thumbnails = document.querySelectorAll('.thumbnail-' + productId);
+        
+        // Update main image
+        mainImage.src = imageUrl;
+        
+        // Update thumbnail borders
+        thumbnails.forEach((thumb, i) => {
+            if (i === index) {
+                thumb.classList.remove('border-gray-200');
+                thumb.classList.add('border-blue-500');
+            } else {
+                thumb.classList.remove('border-blue-500');
+                thumb.classList.add('border-gray-200');
+            }
+        });
+    }
     
     // Toast notification functions
     function showToast(message, type = 'success') {

@@ -17,7 +17,7 @@ class CartController extends Controller
      */
     public function index(): View
     {
-        $cartItems = Cart::with(['product', 'product.category'])
+        $cartItems = Cart::with(['product.images', 'product.category'])
             ->where('user_id', Auth::id())
             ->get();
 
@@ -70,14 +70,14 @@ class CartController extends Controller
             }
 
             $existingCartItem->update(['quantity' => $newQuantity]);
-            $cartItem = $existingCartItem->fresh(['product', 'product.category']);
+            $cartItem = $existingCartItem->fresh(['product.images', 'product.category']);
         } else {
             $cartItem = Cart::create([
                 'user_id' => Auth::id(),
                 'product_id' => $request->product_id,
                 'quantity' => $request->quantity,
             ]);
-            $cartItem->load(['product', 'product.category']);
+            $cartItem->load(['product.images', 'product.category']);
         }
 
         if ($request->expectsJson()) {
@@ -123,7 +123,7 @@ class CartController extends Controller
         }
 
         $cart->update(['quantity' => $request->quantity]);
-        $cart->load(['product', 'product.category']);
+        $cart->load(['product.images', 'product.category']);
 
         if ($request->expectsJson()) {
             return response()->json([

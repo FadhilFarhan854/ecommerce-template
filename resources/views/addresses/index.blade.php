@@ -27,7 +27,7 @@
         {{-- Address Cards --}}
         <div class="bg-white shadow rounded-lg">
             <div class="p-6">
-                @if(isset($addresses) && $addresses->count() > 0)
+                @if($addresses->count() > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @foreach($addresses as $address)
                             <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-200">
@@ -35,16 +35,16 @@
                                     <h3 class="text-lg font-semibold text-gray-900">
                                         {{ $address->nama_depan }} {{ $address->nama_belakang }}
                                     </h3>
-                                    <div class="flex space-x-2">
+                                    <div class="flex gap-2">
                                         <a href="{{ route('addresses.edit', $address) }}" 
                                            class="text-blue-600 hover:text-blue-800 text-sm">
                                             Edit
                                         </a>
-                                        <form action="{{ route('addresses.destroy', $address) }}" method="POST" class="inline">
+                                        <form class="text-red-600 hover:text-red-800 text-sm" action="{{ route('addresses.destroy', $address) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 
-                                                class="text-red-600 hover:text-red-800 text-sm"
+                                                class=""
                                                 onclick="return confirm('Are you sure you want to delete this address?')">
                                                 Delete
                                             </button>

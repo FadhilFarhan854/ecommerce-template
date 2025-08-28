@@ -29,6 +29,11 @@ class ProductRequest extends FormRequest
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'weight' => 'nullable|numeric|min:0',
+            'images' => 'nullable|array|max:10',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image_urls' => 'nullable|string',
+            // Backward compatibility
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'image_url' => 'nullable|url'
         ];
@@ -52,6 +57,13 @@ class ProductRequest extends FormRequest
             'stock.required' => 'The stock quantity is required.',
             'stock.integer' => 'The stock must be a whole number.',
             'stock.min' => 'The stock cannot be negative.',
+            'weight.numeric' => 'The weight must be a valid number.',
+            'weight.min' => 'The weight cannot be negative.',
+            'images.array' => 'Images must be provided as an array.',
+            'images.max' => 'You can upload maximum 10 images.',
+            'images.*.image' => 'Each file must be a valid image.',
+            'images.*.mimes' => 'Each image must be a JPEG, PNG, JPG, or GIF file.',
+            'images.*.max' => 'Each image must not be larger than 2MB.',
             'image.image' => 'The image must be a valid image file.',
             'image.mimes' => 'The image must be a JPEG, PNG, JPG, or GIF file.',
             'image.max' => 'The image must not be larger than 2MB.',

@@ -74,18 +74,40 @@ class ProductController extends Controller
             'description' => $request->description,
             'price' => $request->price,
             'stock' => $request->stock,
+            'weight' => $request->weight,
         ];
 
-        // Handle image upload or URL
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
-            $productData['image'] = '/storage/' . $imagePath;
-        } elseif ($request->filled('image_url')) {
-            $productData['image'] = $request->image_url;
+        $product = Product::create($productData);
+
+        // Handle multiple image uploads
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $imageFile) {
+                $imagePath = $imageFile->store('products', 'public');
+                $product->images()->create(['url' => '/storage/' . $imagePath]);
+            }
         }
 
-        $product = Product::create($productData);
-        $product->load('category');
+        // Handle multiple image URLs
+        if ($request->filled('image_urls')) {
+            $urls = $request->input('image_urls');
+            if (is_array($urls)) {
+                foreach ($urls as $url) {
+                    if (trim($url)) {
+                        $product->images()->create(['url' => trim($url)]);
+                    }
+                }
+            } else {
+                // Split by comma and create images for each URL
+                $urlArray = array_filter(array_map('trim', explode(',', $urls)));
+                foreach ($urlArray as $url) {
+                    if (filter_var($url, FILTER_VALIDATE_URL)) {
+                        $product->images()->create(['url' => $url]);
+                    }
+                }
+            }
+        }
+
+        $product->load(['category', 'images']);
 
         // If API request
         if ($request->wantsJson() || $request->is('api/*')) {
@@ -95,7 +117,7 @@ class ProductController extends Controller
                 'data' => $product
             ], 201);
         }
-        
+
         // If web request (monolith)
         return redirect()->route('products.index')
                         ->with('success', 'Product created successfully');
@@ -106,7 +128,7 @@ class ProductController extends Controller
      */
     public function show(Product $product, Request $request)
     {
-        $product->load('category');
+        $product->load(['category', 'images']);
         
         // If API request
         if ($request->wantsJson() || $request->is('api/*')) {
@@ -148,24 +170,49 @@ class ProductController extends Controller
             'stock' => $request->stock,
         ];
 
-        // Handle image upload or URL
-        if ($request->hasFile('image')) {
-            // Delete old image if it exists and is stored locally
-            if ($product->image && str_starts_with($product->image, '/storage/')) {
-                $oldImagePath = str_replace('/storage/', '', $product->image);
-                if (file_exists(storage_path('app/public/' . $oldImagePath))) {
-                    unlink(storage_path('app/public/' . $oldImagePath));
+        $product->update($productData);
+
+        // Optionally, remove old images if requested
+        if ($request->has('remove_image_ids')) {
+            $ids = $request->input('remove_image_ids');
+            if (is_array($ids)) {
+                foreach ($ids as $id) {
+                    $image = $product->images()->find($id);
+                    if ($image) {
+                        // Delete file if stored locally
+                        if (str_starts_with($image->url, '/storage/')) {
+                            $oldImagePath = str_replace('/storage/', '', $image->url);
+                            if (file_exists(storage_path('app/public/' . $oldImagePath))) {
+                                unlink(storage_path('app/public/' . $oldImagePath));
+                            }
+                        }
+                        $image->delete();
+                    }
                 }
             }
-            
-            $imagePath = $request->file('image')->store('products', 'public');
-            $productData['image'] = '/storage/' . $imagePath;
-        } elseif ($request->filled('image_url')) {
-            $productData['image'] = $request->image_url;
         }
 
-        $product->update($productData);
-        $product->load('category');
+        // Handle new image uploads
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $imageFile) {
+                $imagePath = $imageFile->store('products', 'public');
+                $product->images()->create(['url' => '/storage/' . $imagePath]);
+            }
+        }
+
+        // Handle new image URLs
+        if ($request->filled('image_urls')) {
+            $urls = $request->input('image_urls');
+            if (is_array($urls)) {
+                foreach ($urls as $url) {
+                    $product->images()->create(['url' => $url]);
+                }
+            } else {
+                $product->images()->create(['url' => $urls]);
+            }
+        }
+
+        $product->load(['category', 'images']);
 
         // If API request
         if ($request->wantsJson() || $request->is('api/*')) {
@@ -175,7 +222,7 @@ class ProductController extends Controller
                 'data' => $product
             ]);
         }
-        
+
         // If web request (monolith)
         return redirect()->route('products.index')
                         ->with('success', 'Product updated successfully');
@@ -255,7 +302,7 @@ class ProductController extends Controller
             $query->orderBy($sort, $order);
         }
 
-        $products = $query->with(['category'])->paginate($perPage);
+        $products = $query->with(['category', 'images'])->paginate($perPage);
         
         // Ambil semua kategori untuk filter
         $categories = Category::all();
@@ -268,11 +315,12 @@ class ProductController extends Controller
      */
     public function showProduct(Product $product)
     {
-        $product->load(['category']);
-        $relatedProducts = Product::where('category_id', $product->category_id)
-                                ->where('id', '!=', $product->id)
-                                ->limit(4)
-                                ->get();
+        $product->load(['category', 'images']);
+        $relatedProducts = Product::with(['category', 'images'])
+                    ->where('category_id', $product->category_id)
+                    ->where('id', '!=', $product->id)
+                    ->limit(4)
+                    ->get();
 
         return view('products.show', compact('product', 'relatedProducts'));
     }
