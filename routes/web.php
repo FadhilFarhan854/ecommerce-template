@@ -100,6 +100,16 @@ Route::middleware('auth')->group(function () {
 // Midtrans callback (no auth required)
 Route::post('/midtrans/callback', [CheckoutController::class, 'midtransCallback'])->name('midtrans.callback');
 
+// Check payment status (optional, for admin or debugging)
+Route::get('/midtrans/check/{orderId}', [CheckoutController::class, 'checkPaymentStatus'])
+    ->name('midtrans.check')
+    ->middleware('auth');
+
+// Simulate webhook for testing (development only)
+Route::post('/midtrans/simulate', [CheckoutController::class, 'simulateWebhook'])
+    ->name('midtrans.simulate')
+    ->middleware('auth');
+
 // Web routes untuk orders (monolith approach) - requires authentication
 Route::middleware('auth')->resource('orders', OrderController::class);
 Route::middleware('auth')->get('/history', [OrderController::class, 'history'])->name('orders.history');

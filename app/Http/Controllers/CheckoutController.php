@@ -10,6 +10,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class CheckoutController extends Controller
@@ -230,35 +231,233 @@ class CheckoutController extends Controller
     public function midtransCallback(Request $request)
     {
         try {
+            // Log incoming webhook untuk debugging
+            \Log::info('Midtrans Webhook Received', [
+                'order_id' => $request->order_id,
+                'transaction_status' => $request->transaction_status,
+                'payment_type' => $request->payment_type,
+                'gross_amount' => $request->gross_amount,
+                'fraud_status' => $request->fraud_status ?? null,
+            ]);
+
             $serverKey = config('midtrans.server_key');
-            $hashed = hash("sha512", $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
+            $orderId = $request->order_id;
+            $statusCode = $request->status_code;
+            $grossAmount = $request->gross_amount;
+            $signatureKey = $request->signature_key;
             
-            if ($hashed === $request->signature_key) {
-                // Cari order berdasarkan midtrans_order_id
-                $order = Order::where('midtrans_order_id', $request->order_id)->first();
-                
-                if ($order) {
-                    switch ($request->transaction_status) {
-                        case 'capture':
-                        case 'settlement':
-                            $order->update(['payment_status' => 'paid', 'status' => 'processing']);
-                            break;
-                        case 'pending':
-                            $order->update(['payment_status' => 'pending']);
-                            break;
-                        case 'deny':
-                        case 'cancel':
-                        case 'expire':
-                        case 'failure':
-                            $order->update(['payment_status' => 'failed', 'status' => 'cancelled']);
-                            break;
+            // Verify signature untuk keamanan
+            $hashed = hash("sha512", $orderId . $statusCode . $grossAmount . $serverKey);
+            
+            if ($hashed !== $signatureKey) {
+                \Log::warning('Invalid Midtrans signature', [
+                    'order_id' => $orderId,
+                    'expected' => $hashed,
+                    'received' => $signatureKey
+                ]);
+                return response()->json(['status' => 'error', 'message' => 'Invalid signature'], 401);
+            }
+
+            // Cari order berdasarkan midtrans_order_id
+            $order = Order::where('midtrans_order_id', $orderId)->first();
+            
+            if (!$order) {
+                \Log::warning('Order not found for Midtrans callback', ['order_id' => $orderId]);
+                return response()->json(['status' => 'error', 'message' => 'Order not found'], 404);
+            }
+
+            // Update status berdasarkan transaction_status
+            $transactionStatus = $request->transaction_status;
+            $fraudStatus = $request->fraud_status;
+            $oldPaymentStatus = $order->payment_status;
+            $oldStatus = $order->status;
+
+            switch ($transactionStatus) {
+                case 'capture':
+                    // Untuk credit card, perlu cek fraud_status
+                    if ($fraudStatus == 'accept') {
+                        $order->update([
+                            'payment_status' => 'paid',
+                            'status' => 'processing'
+                        ]);
+                        \Log::info('Order payment captured and accepted', ['order_id' => $orderId]);
+                    } else if ($fraudStatus == 'challenge') {
+                        $order->update([
+                            'payment_status' => 'pending',
+                            'status' => 'pending'
+                        ]);
+                        \Log::info('Order payment captured but challenged', ['order_id' => $orderId]);
+                    } else {
+                        $order->update([
+                            'payment_status' => 'failed',
+                            'status' => 'cancelled'
+                        ]);
+                        \Log::info('Order payment captured but denied', ['order_id' => $orderId]);
                     }
-                }
+                    break;
+
+                case 'settlement':
+                    // Pembayaran berhasil (untuk non-credit card)
+                    $order->update([
+                        'payment_status' => 'paid',
+                        'status' => 'processing'
+                    ]);
+                    \Log::info('Order payment settled', ['order_id' => $orderId]);
+                    break;
+
+                case 'pending':
+                    // Pembayaran pending (menunggu)
+                    $order->update([
+                        'payment_status' => 'pending'
+                    ]);
+                    \Log::info('Order payment pending', ['order_id' => $orderId]);
+                    break;
+
+                case 'deny':
+                case 'cancel':
+                case 'expire':
+                case 'failure':
+                    // Pembayaran gagal atau dibatalkan
+                    $order->update([
+                        'payment_status' => 'failed',
+                        'status' => 'cancelled'
+                    ]);
+                    
+                    // Kembalikan stok produk jika pembayaran gagal
+                    foreach ($order->items as $item) {
+                        $item->product->increment('stock', $item->quantity);
+                    }
+                    
+                    \Log::info('Order payment failed/cancelled, stock restored', [
+                        'order_id' => $orderId,
+                        'status' => $transactionStatus
+                    ]);
+                    break;
+
+                default:
+                    \Log::warning('Unknown transaction status', [
+                        'order_id' => $orderId,
+                        'status' => $transactionStatus
+                    ]);
+                    break;
+            }
+
+            // Log perubahan status
+            if ($oldPaymentStatus !== $order->payment_status || $oldStatus !== $order->status) {
+                \Log::info('Order status updated', [
+                    'order_id' => $orderId,
+                    'old_payment_status' => $oldPaymentStatus,
+                    'new_payment_status' => $order->payment_status,
+                    'old_status' => $oldStatus,
+                    'new_status' => $order->status
+                ]);
             }
             
             return response()->json(['status' => 'ok']);
+            
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error'], 500);
+            \Log::error('Midtrans webhook error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+            
+            return response()->json(['status' => 'error', 'message' => 'Internal server error'], 500);
         }
+    }
+
+    /**
+     * Cek status pembayaran secara manual (optional)
+     */
+    public function checkPaymentStatus($orderId)
+    {
+        try {
+            $order = Order::where('midtrans_order_id', $orderId)->first();
+            
+            if (!$order) {
+                return response()->json(['status' => 'error', 'message' => 'Order not found'], 404);
+            }
+
+            // Get transaction status from Midtrans API
+            $serverKey = config('midtrans.server_key');
+            $curl = curl_init();
+
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => config('midtrans.base_url') . '/v2/' . $orderId . '/status',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => array(
+                    'Accept: application/json',
+                    'Content-Type: application/json',
+                    'Authorization: Basic ' . base64_encode($serverKey . ':')
+                ),
+            ));
+
+            $response = curl_exec($curl);
+            $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            curl_close($curl);
+
+            if ($httpCode === 200) {
+                $result = json_decode($response, true);
+                
+                return response()->json([
+                    'status' => 'success',
+                    'order' => $order,
+                    'midtrans_status' => $result
+                ]);
+            } else {
+                return response()->json(['status' => 'error', 'message' => 'Failed to get status from Midtrans'], 400);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error checking payment status', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json(['status' => 'error', 'message' => 'Internal server error'], 500);
+        }
+    }
+
+    /**
+     * Simulate webhook untuk testing (development only)
+     */
+    public function simulateWebhook(Request $request)
+    {
+        if (config('app.env') !== 'local') {
+            return response()->json(['status' => 'error', 'message' => 'Only available in development'], 403);
+        }
+
+        $orderId = $request->input('order_id');
+        $transactionStatus = $request->input('transaction_status', 'settlement');
+        
+        $order = Order::where('midtrans_order_id', $orderId)->first();
+        
+        if (!$order) {
+            return response()->json(['status' => 'error', 'message' => 'Order not found'], 404);
+        }
+
+        // Simulate webhook request
+        $simulatedRequest = new Request([
+            'order_id' => $orderId,
+            'transaction_status' => $transactionStatus,
+            'status_code' => '200',
+            'gross_amount' => $order->total_price,
+            'payment_type' => 'bank_transfer',
+            'fraud_status' => 'accept',
+            'signature_key' => hash("sha512", $orderId . '200' . $order->total_price . config('midtrans.server_key'))
+        ]);
+
+        // Process webhook
+        $result = $this->midtransCallback($simulatedRequest);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Webhook simulated successfully',
+            'webhook_result' => $result->getData(),
+            'order_status' => [
+                'payment_status' => $order->fresh()->payment_status,
+                'status' => $order->fresh()->status
+            ]
+        ]);
     }
 }

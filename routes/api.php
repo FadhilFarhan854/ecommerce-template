@@ -38,3 +38,12 @@ Route::prefix('shipment')->group(function () {
     Route::post('/compare-costs', [App\Http\Controllers\ShipmentController::class, 'compareShippingCosts']);
     Route::get('/couriers', [App\Http\Controllers\ShipmentController::class, 'getAvailableCouriers']);
 });
+
+// Midtrans webhook (no auth required)
+Route::post('/midtrans/callback', [App\Http\Controllers\CheckoutController::class, 'midtransCallback']);
+
+// Midtrans management routes (auth required)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/midtrans/check/{orderId}', [App\Http\Controllers\CheckoutController::class, 'checkPaymentStatus']);
+    Route::post('/midtrans/simulate', [App\Http\Controllers\CheckoutController::class, 'simulateWebhook']);
+});
