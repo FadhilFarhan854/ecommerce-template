@@ -100,6 +100,17 @@ Route::middleware('auth')->group(function () {
 // Midtrans callback (no auth required)
 Route::post('/midtrans/callback', [CheckoutController::class, 'midtransCallback'])->name('midtrans.callback');
 
+// Test route untuk verify webhook accessibility
+Route::get('/midtrans/test', function () {
+    return response()->json([
+        'status' => 'Webhook endpoint is accessible',
+        'timestamp' => now(),
+        'environment' => config('app.env'),
+        'url' => config('app.url'),
+        'midtrans_mode' => config('midtrans.is_production') ? 'production' : 'sandbox'
+    ]);
+})->name('midtrans.test');
+
 // Check payment status (optional, for admin or debugging)
 Route::get('/midtrans/check/{orderId}', [CheckoutController::class, 'checkPaymentStatus'])
     ->name('midtrans.check')
