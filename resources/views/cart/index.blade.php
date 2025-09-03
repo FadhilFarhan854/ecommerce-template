@@ -441,8 +441,8 @@
     }
     
     function checkout() {
-        // For now, just show a message
-        showToast('Fitur checkout akan segera hadir!', 'success');
+        // Redirect to checkout page
+        window.location.href = '{{ route("checkout.index") }}';
     }
 </script>
 @endpush

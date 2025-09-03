@@ -29,7 +29,7 @@ class ProductSeeder extends Seeder
                 'description' => 'The latest iPhone with advanced camera system and A16 Bionic chip.',
                 'price' => 999.99,
                 'stock' => 50,
-                'image' => 'https://via.placeholder.com/400x400/000000/FFFFFF?text=iPhone+14+Pro',
+                'weight' => 0.206,
                 'category_name' => 'Electronics'
             ],
             [
@@ -38,7 +38,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Lightweight laptop with M2 chip and all-day battery life.',
                 'price' => 1199.99,
                 'stock' => 30,
-                'image' => 'https://via.placeholder.com/400x400/C0C0C0/000000?text=MacBook+Air',
+                'weight' => 1.24,
                 'category_name' => 'Electronics'
             ],
             [
@@ -47,7 +47,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Smart TV with crystal clear 4K display and HDR support.',
                 'price' => 799.99,
                 'stock' => 15,
-                'image' => 'https://via.placeholder.com/400x400/000080/FFFFFF?text=Samsung+TV',
+                'weight' => 18.5,
                 'category_name' => 'Electronics'
             ],
 
@@ -58,7 +58,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Premium cotton t-shirt with comfortable fit.',
                 'price' => 24.99,
                 'stock' => 100,
-                'image' => 'https://via.placeholder.com/400x400/FFFFFF/000000?text=White+T-Shirt',
+                'weight' => 0.2,
                 'category_name' => 'Clothing & Fashion'
             ],
             [
@@ -67,7 +67,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Classic blue jeans with modern fit and stretch fabric.',
                 'price' => 79.99,
                 'stock' => 75,
-                'image' => 'https://via.placeholder.com/400x400/4169E1/FFFFFF?text=Denim+Jeans',
+                'weight' => 0.8,
                 'category_name' => 'Clothing & Fashion'
             ],
             [
@@ -76,7 +76,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Genuine leather jacket with classic design.',
                 'price' => 199.99,
                 'stock' => 25,
-                'image' => 'https://via.placeholder.com/400x400/8B4513/FFFFFF?text=Leather+Jacket',
+                'weight' => 1.5,
                 'category_name' => 'Clothing & Fashion'
             ],
 
@@ -87,7 +87,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Programmable coffee maker with built-in grinder.',
                 'price' => 149.99,
                 'stock' => 40,
-                'image' => 'https://via.placeholder.com/400x400/8B4513/FFFFFF?text=Coffee+Maker',
+                'weight' => 4.5,
                 'category_name' => 'Home & Garden'
             ],
             [
@@ -96,7 +96,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Complete set of essential gardening tools.',
                 'price' => 89.99,
                 'stock' => 60,
-                'image' => 'https://via.placeholder.com/400x400/228B22/FFFFFF?text=Garden+Tools',
+                'weight' => 3.2,
                 'category_name' => 'Home & Garden'
             ],
 
@@ -107,7 +107,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Non-slip yoga mat with extra cushioning.',
                 'price' => 39.99,
                 'stock' => 80,
-                'image' => 'https://via.placeholder.com/400x400/FF69B4/FFFFFF?text=Yoga+Mat',
+                'weight' => 1.8,
                 'category_name' => 'Sports & Outdoors'
             ],
             [
@@ -116,7 +116,7 @@ class ProductSeeder extends Seeder
                 'description' => '21-speed mountain bike with aluminum frame.',
                 'price' => 599.99,
                 'stock' => 12,
-                'image' => 'https://via.placeholder.com/400x400/FF4500/FFFFFF?text=Mountain+Bike',
+                'weight' => 15.5,
                 'category_name' => 'Sports & Outdoors'
             ],
 
@@ -127,7 +127,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Essential programming books for developers.',
                 'price' => 129.99,
                 'stock' => 35,
-                'image' => 'https://via.placeholder.com/400x400/800080/FFFFFF?text=Programming+Books',
+                'weight' => 2.5,
                 'category_name' => 'Books & Media'
             ],
             [
@@ -136,7 +136,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Noise-cancelling wireless headphones with premium sound.',
                 'price' => 249.99,
                 'stock' => 45,
-                'image' => 'https://via.placeholder.com/400x400/000000/FFFFFF?text=Headphones',
+                'weight' => 0.3,
                 'category_name' => 'Books & Media'
             ]
         ];
@@ -153,7 +153,7 @@ class ProductSeeder extends Seeder
                     'description' => $productData['description'],
                     'price' => $productData['price'],
                     'stock' => $productData['stock'],
-                    'image' => $productData['image']
+                    'weight' => $productData['weight']
                 ]);
             }
         }

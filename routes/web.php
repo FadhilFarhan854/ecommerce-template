@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -89,9 +90,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/cart/count', [CartController::class, 'webCount'])->name('cart.count');
 });
 
+// Web routes untuk checkout (monolith approach) - requires authentication
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
+    Route::get('/checkout/addresses', [CheckoutController::class, 'getUserAddresses'])->name('checkout.addresses');
+});
+
+// Midtrans callback (no auth required)
+Route::post('/midtrans/callback', [CheckoutController::class, 'midtransCallback'])->name('midtrans.callback');
+
 // Web routes untuk orders (monolith approach) - requires authentication
 Route::middleware('auth')->resource('orders', OrderController::class);
 Route::middleware('auth')->get('/history', [OrderController::class, 'history'])->name('orders.history');
 
 // Web routes untuk order items (monolith approach) - requires authentication
 Route::middleware('auth')->resource('order-items', OrderItemController::class);
+
+// Shipment example route
+Route::get('/shipment/example', function () {
+    return view('shipment.example');
+})->name('shipment.example');

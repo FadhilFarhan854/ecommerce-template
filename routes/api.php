@@ -30,32 +30,11 @@ Route::get('/health', function () {
     ]);
 });
 
-/*
-|--------------------------------------------------------------------------
-| Future API Routes
-|--------------------------------------------------------------------------
-|
-| When you need to add API functionality (mobile app, third-party integration),
-| you can uncomment and modify the routes below:
-|
-| // Authentication routes
-| Route::prefix('auth')->group(function () {
-|     Route::post('/register', [AuthController::class, 'register']);
-|     Route::post('/login', [AuthController::class, 'login']);
-|     Route::middleware('auth:sanctum')->group(function () {
-|         Route::get('/profile', [AuthController::class, 'profile']);
-|         Route::post('/logout', [AuthController::class, 'logout']);
-|     });
-| });
-|
-| // Cart API routes  
-| Route::middleware('auth:sanctum')->prefix('cart')->group(function () {
-|     Route::get('/', [CartController::class, 'apiIndex']);
-|     Route::post('/', [CartController::class, 'apiStore']);
-|     Route::put('/{cart}', [CartController::class, 'apiUpdate']);
-|     Route::delete('/{cart}', [CartController::class, 'apiDestroy']);
-|     Route::delete('/', [CartController::class, 'apiClear']);
-|     Route::get('/count', [CartController::class, 'apiCount']);
-| });
-|
-*/
+// Shipment Routes
+Route::prefix('shipment')->group(function () {
+    Route::get('/provinces', [App\Http\Controllers\ShipmentController::class, 'getProvinces']);
+    Route::get('/cities', [App\Http\Controllers\ShipmentController::class, 'getCities']);
+    Route::post('/calculate-cost', [App\Http\Controllers\ShipmentController::class, 'calculateShippingCost']);
+    Route::post('/compare-costs', [App\Http\Controllers\ShipmentController::class, 'compareShippingCosts']);
+    Route::get('/couriers', [App\Http\Controllers\ShipmentController::class, 'getAvailableCouriers']);
+});

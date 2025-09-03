@@ -9,7 +9,7 @@ class LandingPageController extends Controller
     public function index()
     {
         // Jika ada produk di database, gunakan itu. Jika tidak, gunakan sample products
-        $products = \App\Models\Product::take(6)->get();
+        $products = \App\Models\Product::with('images')->take(6)->get();
         if ($products->isEmpty()) {
             $products = collect(config('landing.sample_products'))->map(function ($product) {
                 return (object) $product;
@@ -42,11 +42,11 @@ class LandingPageController extends Controller
                 ]
             ],
             'about' => [
-                'title' => config('app.about.title', 'Tentang TokoKu Store'),
-                'description' => config('app.about.description', 'TokoKu Store adalah platform e-commerce terpercaya yang menyediakan berbagai produk berkualitas tinggi dengan harga kompetitif. Kami berkomitmen untuk memberikan pengalaman belanja terbaik untuk setiap pelanggan.'),
-                'additional_info' => config('app.about.additional_info'),
-                'vision' => config('app.about.vision'),
-                'mission' => config('app.about.mission')
+                'title' => config('landing.about.title', 'Tentang TokoKu Store'),
+                'description' => config('landing.about.description', 'TokoKu Store adalah platform e-commerce terpercaya yang menyediakan berbagai produk berkualitas tinggi dengan harga kompetitif. Kami berkomitmen untuk memberikan pengalaman belanja terbaik untuk setiap pelanggan.'),
+                'additional_info' => config('landing.about.additional_info'),
+                'vision' => config('landing.about.vision'),
+                'mission' => config('landing.about.mission')
             ]
         ];
 
