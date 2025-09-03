@@ -73,25 +73,23 @@ class ShipmentController extends Controller
     /**
      * Get cities by province ID
      */
-    public function getCities(Request $request): JsonResponse
+    public function getCities($province_id): JsonResponse
     {
         try {
-            $provinceId = $request->get('province_id');
-            
-            if (!$provinceId) {
+            if (!$province_id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Province ID is required'
                 ], 400);
             }
 
-            $cacheKey = "rajaongkir_cities_{$provinceId}";
+            $cacheKey = "rajaongkir_cities_{$province_id}";
 
             // Cache cities for 24 hours
-            $cities = Cache::remember($cacheKey, 86400, function () use ($provinceId) {
+            $cities = Cache::remember($cacheKey, 86400, function () use ($province_id) {
                 $response = Http::withHeaders([
                     'key' => $this->apiKey
-                ])->get($this->baseUrl . '/destination/city/' . $provinceId);
+                ])->get($this->baseUrl . '/destination/city/' . $province_id);
 
                 if (!$response->successful()) {
                     throw new \Exception('Failed to fetch cities from RajaOngkir');
@@ -104,10 +102,10 @@ class ShipmentController extends Controller
                 }
 
                 // Transform to match frontend expectations  
-                return collect($data['data'])->map(function ($city) use ($provinceId) {
+                return collect($data['data'])->map(function ($city) use ($province_id) {
                     return [
                         'city_id' => $city['id'],
-                        'province_id' => $provinceId,
+                        'province_id' => $province_id,
                         'city_name' => $city['name'],
                         'type' => 'Kota/Kabupaten' // Default type since API doesn't provide it
                     ];
@@ -163,22 +161,23 @@ class ShipmentController extends Controller
                 throw new \Exception('Invalid response format from RajaOngkir');
             }
 
-            // Transform the response to make it easier to use
-            $results = collect($data['data'])->map(function ($courier) {
+            // Transform the response to match expected format
+            $results = collect($data['data'])->groupBy('code')->map(function ($services, $courierCode) {
+                $firstService = $services->first();
                 return [
-                    'courier_code' => $courier['code'],
-                    'courier_name' => $courier['name'],
-                    'services' => collect($courier['costs'])->map(function ($cost) {
+                    'courier_code' => $courierCode,
+                    'courier_name' => $firstService['name'],
+                    'services' => $services->map(function ($service) {
                         return [
-                            'service' => $cost['service'],
-                            'description' => $cost['description'],
-                            'cost' => $cost['cost'][0]['value'],
-                            'etd' => $cost['cost'][0]['etd'],
-                            'note' => $cost['cost'][0]['note'] ?? ''
+                            'service' => $service['service'],
+                            'description' => $service['description'],
+                            'cost' => $service['cost'],
+                            'etd' => $service['etd'],
+                            'note' => ''
                         ];
-                    })
+                    })->values()
                 ];
-            });
+            })->values();
 
             return response()->json([
                 'success' => true,
@@ -263,21 +262,26 @@ class ShipmentController extends Controller
 
                     if ($response->successful()) {
                         $data = $response->json();
-                        if (isset($data['data'][0])) {
-                            $courierData = $data['data'][0];
-                            $results->push([
-                                'courier_code' => $courierData['code'],
-                                'courier_name' => $courierData['name'],
-                                'services' => collect($courierData['costs'])->map(function ($cost) {
-                                    return [
-                                        'service' => $cost['service'],
-                                        'description' => $cost['description'],
-                                        'cost' => $cost['cost'][0]['value'],
-                                        'etd' => $cost['cost'][0]['etd'],
-                                        'note' => $cost['cost'][0]['note'] ?? ''
-                                    ];
-                                })
-                            ]);
+                        if (isset($data['data']) && !empty($data['data'])) {
+                            // Group services by courier
+                            $courierServices = collect($data['data'])->groupBy('code');
+                            
+                            foreach ($courierServices as $courierCode => $services) {
+                                $firstService = $services->first();
+                                $results->push([
+                                    'courier_code' => $courierCode,
+                                    'courier_name' => $firstService['name'],
+                                    'services' => $services->map(function ($service) {
+                                        return [
+                                            'service' => $service['service'],
+                                            'description' => $service['description'],
+                                            'cost' => $service['cost'],
+                                            'etd' => $service['etd'],
+                                            'note' => ''
+                                        ];
+                                    })->values()
+                                ]);
+                            }
                         }
                     }
                 } catch (\Exception $e) {

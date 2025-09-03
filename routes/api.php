@@ -33,7 +33,7 @@ Route::get('/health', function () {
 // Shipment Routes
 Route::prefix('shipment')->group(function () {
     Route::get('/provinces', [App\Http\Controllers\ShipmentController::class, 'getProvinces']);
-    Route::get('/cities', [App\Http\Controllers\ShipmentController::class, 'getCities']);
+    Route::get('/cities/{province_id}', [App\Http\Controllers\ShipmentController::class, 'getCities']);
     Route::post('/calculate-cost', [App\Http\Controllers\ShipmentController::class, 'calculateShippingCost']);
     Route::post('/compare-costs', [App\Http\Controllers\ShipmentController::class, 'compareShippingCosts']);
     Route::get('/couriers', [App\Http\Controllers\ShipmentController::class, 'getAvailableCouriers']);

@@ -31,9 +31,17 @@
                     <span class="text-gray-600">Total Berat:</span>
                     <span class="font-medium">{{ number_format($totalWeight, 2) }} kg</span>
                 </div>
-                <div class="flex justify-between items-center text-lg font-bold mt-2">
-                    <span>Total Harga:</span>
-                    <span>Rp {{ number_format($totalPrice, 0, ',', '.') }}</span>
+                <div class="flex justify-between items-center mt-2">
+                    <span class="text-gray-600">Subtotal:</span>
+                    <span class="font-medium">Rp {{ number_format($totalPrice, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between items-center mt-2" id="shippingCostRow" style="display: none;">
+                    <span class="text-gray-600">Ongkos Kirim:</span>
+                    <span class="font-medium" id="shippingCostDisplay">Rp 0</span>
+                </div>
+                <div class="flex justify-between items-center text-lg font-bold mt-3 pt-2 border-t">
+                    <span>Total Bayar:</span>
+                    <span id="grandTotalDisplay">Rp {{ number_format($totalPrice ?? 0, 0, ',', '.') }}</span>
                 </div>
             </div>
         </div>
@@ -54,12 +62,15 @@
                             @foreach($addresses as $address)
                             <div class="border rounded-lg p-3">
                                 <label class="flex items-start cursor-pointer">
-                                    <input type="radio" name="address_option" value="existing" class="mt-1 mr-3" data-address-id="{{ $address->id }}">
+                                    <input type="radio" name="address_option" value="existing" class="mt-1 mr-3" 
+                                           data-address-id="{{ $address->id }}"
+                                           data-city-id="{{ $address->kota }}"
+                                           data-city-name="{{ $address->kota_name ?? $address->kota }}">
                                     <div>
                                         <p class="font-medium">{{ $address->nama_depan }} {{ $address->nama_belakang }}</p>
                                         <p class="text-sm text-gray-600">{{ $address->alamat }}</p>
                                         <p class="text-sm text-gray-600">{{ $address->kelurahan }}, {{ $address->kecamatan }}</p>
-                                        <p class="text-sm text-gray-600">{{ $address->kota }}, {{ $address->provinsi }} {{ $address->kode_pos }}</p>
+                                        <p class="text-sm text-gray-600">{{ $address->kota_name ?? $address->kota }}, {{ $address->provinsi_name ?? $address->provinsi }} {{ $address->kode_pos }}</p>
                                         <p class="text-sm text-gray-600">HP: {{ $address->hp }}</p>
                                     </div>
                                 </label>
@@ -141,17 +152,49 @@
                 <input type="hidden" name="shipping_service" id="shippingServiceHidden">
                 <input type="hidden" name="shipping_description" id="shippingDescriptionHidden">
                 <input type="hidden" name="shipping_etd" id="shippingEtdHidden">
+                <input type="hidden" name="grand_total" id="grandTotalHidden" value="{{ intval($totalPrice) }}">
 
                 <input type="hidden" name="address_id" id="selectedAddressId">
+                
+                <!-- Shipping Information Display (for existing address) -->
+                <div id="existingAddressShipping" class="mt-4 p-3 bg-blue-50 rounded-md" style="display: none;">
+                    <h4 class="font-semibold text-blue-800">Pengiriman Otomatis:</h4>
+                    <div id="existingShippingDetails" class="text-blue-700 text-sm"></div>
+                </div>
                 
                 <!-- Shipping Calculation Section -->
                 <div class="mt-8 p-4 bg-gray-50 rounded-lg" id="shippingSection" style="display: none;">
                     <h3 class="text-lg font-semibold mb-4">Pilih Metode Pengiriman</h3>
                     
+                    <!-- Courier Selection -->
                     <div class="mb-4">
-                        <button type="button" id="calculateShippingBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
-                            <i class="fas fa-calculator"></i> Hitung Ongkos Kirim
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kurir:</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <label class="flex items-center cursor-pointer p-2 border rounded-md hover:bg-blue-50">
+                                <input type="radio" name="courier_selection" value="all" class="mr-2" checked>
+                                <span class="text-sm">Semua</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 border rounded-md hover:bg-blue-50">
+                                <input type="radio" name="courier_selection" value="jne" class="mr-2">
+                                <span class="text-sm">JNE</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 border rounded-md hover:bg-blue-50">
+                                <input type="radio" name="courier_selection" value="pos" class="mr-2">
+                                <span class="text-sm">POS Indonesia</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 border rounded-md hover:bg-blue-50">
+                                <input type="radio" name="courier_selection" value="tiki" class="mr-2">
+                                <span class="text-sm">TIKI</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4" id="calculateShippingSection">
+                        <button type="button" id="calculateShippingBtn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200 flex items-center gap-2">
+                            <i class="fas fa-calculator"></i> 
+                            <span>Hitung Ongkos Kirim</span>
                         </button>
+                        <p class="text-sm text-gray-600 mt-2">Klik tombol di atas untuk menghitung ongkos kirim setelah memilih provinsi dan kota.</p>
                     </div>
                     
                     <div id="shippingLoader" class="text-center py-4" style="display: none;">
@@ -206,6 +249,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkoutForm = document.getElementById('checkoutForm');
     const loadingModal = document.getElementById('loadingModal');
 
+    // Initialize: disable required validation for new address form if it's hidden
+    if (newAddressForm && newAddressForm.style.display === 'none') {
+        const newAddressInputs = newAddressForm.querySelectorAll('input, select, textarea');
+        newAddressInputs.forEach(input => {
+            if (input.required) {
+                input.setAttribute('data-required', 'true');
+                input.required = false;
+            }
+            input.disabled = true;
+        });
+    }
+
     console.log('Checkout form initialized');
     console.log('Address options found:', addressOptions.length);
     console.log('New address form:', newAddressForm);
@@ -214,33 +269,66 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle address option change
     addressOptions.forEach(option => {
         option.addEventListener('change', function() {
-            console.log('Address option changed:', this.value);
-            const newAddressInputs = newAddressForm.querySelectorAll('input, textarea');
+            console.log('Address option changed:', this.value, this);
+            const newAddressInputs = newAddressForm.querySelectorAll('input, select, textarea');
             
             if (this.value === 'new') {
                 newAddressForm.style.display = 'block';
                 selectedAddressId.value = '';
-                // Enable all new address form inputs
+                // Enable all new address form inputs and restore required attributes
                 newAddressInputs.forEach(input => {
                     input.disabled = false;
+                    if (input.hasAttribute('data-required')) {
+                        input.required = true;
+                    }
                 });
                 console.log('Showing new address form');
-            } else {
+                // Hide shipping section for new address until city is selected
+                hideShippingSection();
+                resetShippingCost();
+            } else if (this.value === 'existing') {
                 newAddressForm.style.display = 'none';
+                // Disable required validation for hidden form
+                newAddressInputs.forEach(input => {
+                    if (input.required) {
+                        input.setAttribute('data-required', 'true');
+                        input.required = false;
+                    }
+                    input.disabled = true;
+                });
                 const addressId = this.dataset.addressId || '';
+                const cityId = this.dataset.cityId || '';
+                const cityName = this.dataset.cityName || '';
+                
+                console.log('Address data:', {
+                    addressId: addressId,
+                    cityId: cityId,
+                    cityName: cityName,
+                    dataset: this.dataset
+                });
+                
                 selectedAddressId.value = addressId;
                 // Disable and clear all new address form inputs
                 newAddressInputs.forEach(input => {
                     input.disabled = true;
                     input.value = '';
                 });
-                        console.log('Hiding new address form, selected ID:', addressId);
-                    }
-                    
-                    // Show shipping section if city is selected
-                    checkShippingSection();
-                });
-            });
+                console.log('Hiding new address form, selected ID:', addressId, 'City ID:', cityId);
+                
+                // Auto-calculate shipping for existing address
+                if (cityId && cityId !== '') {
+                    console.log('Starting auto-calculate shipping...');
+                    autoCalculateShippingForAddress(cityId, cityName);
+                } else {
+                    console.warn('No city ID found for address:', addressId);
+                    resetShippingCost();
+                }
+            }
+            
+            // Show shipping section if city is selected
+            checkShippingSection();
+        });
+    });
             
             // Handle province and city changes
             const provinsiSelect = document.getElementById('provinsiSelect');
@@ -270,7 +358,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const calculateShippingBtn = document.getElementById('calculateShippingBtn');
             if (calculateShippingBtn) {
                 calculateShippingBtn.addEventListener('click', calculateShipping);
-            }    // Handle form submission
+            }
+            
+            // Handle courier selection change
+            const courierRadios = document.querySelectorAll('input[name="courier_selection"]');
+            courierRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // Reset shipping options when courier selection changes
+                    hideShippingOptions();
+                });
+            });    // Handle form submission
     if (checkoutForm) {
         checkoutForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -283,13 +380,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Validasi shipping untuk alamat baru
+            // Re-enable required validation for new address form if selected
             if (selectedAddressOption.value === 'new') {
-                const shippingCost = document.getElementById('shippingCostHidden').value;
-                if (!shippingCost) {
-                    alert('Silakan pilih metode pengiriman terlebih dahulu.');
-                    return;
+                const newAddressInputs = newAddressForm.querySelectorAll('input, select, textarea');
+                newAddressInputs.forEach(input => {
+                    if (input.hasAttribute('data-required')) {
+                        input.required = true;
+                        input.disabled = false;
+                    }
+                });
+            }
+            
+            // Validasi shipping cost tersedia
+            const shippingCost = document.getElementById('shippingCostHidden').value;
+            if (!shippingCost || shippingCost === '0') {
+                if (selectedAddressOption.value === 'new') {
+                    alert('Silakan hitung dan pilih metode pengiriman terlebih dahulu.');
+                } else {
+                    alert('Ongkos kirim belum tersedia untuk alamat ini. Silakan coba lagi atau pilih alamat lain.');
                 }
+                return;
             }
             
             if (loadingModal) {
@@ -297,6 +407,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const formData = new FormData(this);
+            
+            // Debug form data sebelum dikirim
+            console.log('Form data before submission:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value} (type: ${typeof value})`);
+            }
             
             // Jika alamat existing dipilih, hapus field alamat baru dari form data
             const addressOptionValue = formData.get('address_option');
@@ -416,8 +532,37 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Shipment functions
     let selectedShipping = null;
-    const storeLocation = 501; // Default store location (Yogyakarta)
+    const storeLocation = {{ config('store.shipping_origin.city_id', 501) }}; // Store location from config
     const totalWeight = {{ $totalWeight * 1000 ?? 1000 }}; // Convert to grams
+    const initialTotal = parseInt({{ $totalPrice ?? 0 }}); // Convert to exact integer tanpa pembulatan
+    
+    console.log('Checkout initialized:', {
+        storeLocation: storeLocation,
+        totalWeight: totalWeight,
+        initialTotal: initialTotal,
+        totalPriceFromPHP: {{ $totalPrice ?? 'null' }},
+        totalWeightFromPHP: {{ $totalWeight ?? 'null' }}
+    });
+    
+    // Initialize order summary on page load
+    updateOrderSummary();
+    
+    // Debug existing addresses
+    console.log('Checking existing addresses...');
+    const existingAddresses = document.querySelectorAll('input[name="address_option"][value="existing"]');
+    existingAddresses.forEach((addr, index) => {
+        console.log(`Address ${index + 1}:`, {
+            addressId: addr.dataset.addressId,
+            cityId: addr.dataset.cityId,
+            cityName: addr.dataset.cityName
+        });
+    });
+    
+    // Test function for manual debugging (can be called from browser console)
+    window.testAutoCalculate = function(cityId) {
+        console.log('Testing auto-calculate with city ID:', cityId);
+        autoCalculateShippingForAddress(cityId, 'Test City');
+    };
     
     async function loadProvinces() {
         try {
@@ -448,7 +593,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!provinceId) return;
         
         try {
-            const response = await fetch(`/api/shipment/cities?province_id=${provinceId}`);
+            const response = await fetch(`/api/shipment/cities/${provinceId}`);
             const data = await response.json();
             
             if (data.success) {
@@ -480,13 +625,27 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function hideShippingSection() {
         const shippingSection = document.getElementById('shippingSection');
+        hideShippingOptions();
+        shippingSection.style.display = 'none';
+    }
+    
+    function hideShippingOptions() {
         const shippingOptions = document.getElementById('shippingOptions');
         const selectedShippingInfo = document.getElementById('selectedShippingInfo');
         
-        shippingSection.style.display = 'none';
         shippingOptions.style.display = 'none';
         selectedShippingInfo.style.display = 'none';
         selectedShipping = null;
+        
+        // Reset hidden inputs
+        document.getElementById('shippingCostHidden').value = '';
+        document.getElementById('shippingCourierHidden').value = '';
+        document.getElementById('shippingServiceHidden').value = '';
+        document.getElementById('shippingDescriptionHidden').value = '';
+        document.getElementById('shippingEtdHidden').value = '';
+        
+        // Update order summary
+        updateOrderSummary();
     }
     
     async function calculateShipping() {
@@ -498,21 +657,42 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Get selected courier
+        const selectedCourier = document.querySelector('input[name="courier_selection"]:checked');
+        const courierValue = selectedCourier ? selectedCourier.value : 'all';
+        
         showShippingLoader(true);
         
         try {
-            const response = await fetch('/api/shipment/compare-costs', {
+            let endpoint, requestData;
+            
+            if (courierValue === 'all') {
+                // Compare all couriers
+                endpoint = '/api/shipment/compare-costs';
+                requestData = {
+                    origin: storeLocation,
+                    destination: parseInt(destination),
+                    weight: totalWeight,
+                    couriers: ['jne', 'pos', 'tiki']
+                };
+            } else {
+                // Single courier calculation
+                endpoint = '/api/shipment/calculate-cost';
+                requestData = {
+                    origin: storeLocation,
+                    destination: parseInt(destination),
+                    weight: totalWeight,
+                    courier: courierValue
+                };
+            }
+            
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify({
-                    origin: storeLocation,
-                    destination: parseInt(destination),
-                    weight: totalWeight,
-                    couriers: ['jne', 'pos', 'tiki']
-                })
+                body: JSON.stringify(requestData)
             });
             
             const data = await response.json();
@@ -557,10 +737,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div>
                                     <h4 class="font-semibold text-gray-800">${courier.courier_name}</h4>
                                     <p class="text-sm text-gray-600">${service.service} - ${service.description}</p>
-                                    <p class="text-xs text-gray-500">Estimasi: ${service.etd} hari</p>
+                                    <p class="text-xs text-gray-500">Estimasi: ${service.etd}</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="font-bold text-blue-600">Rp ${service.cost.toLocaleString('id-ID')}</p>
+                                    <p class="font-bold text-blue-600">Rp ${parseInt(service.cost).toLocaleString('id-ID')}</p>
                                 </div>
                             </div>
                         </div>
@@ -594,15 +774,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function selectShipping(radio) {
         selectedShipping = {
-            cost: parseInt(radio.value),
+            cost: parseInt(radio.value) || 0,
             courier: radio.dataset.courier,
             service: radio.dataset.service,
             description: radio.dataset.description,
             etd: radio.dataset.etd
         };
         
-        // Update hidden inputs for form submission
-        document.getElementById('shippingCostHidden').value = selectedShipping.cost;
+        // Update hidden inputs for form submission (except shipping cost - will be handled by updateOrderSummary)
         document.getElementById('shippingCourierHidden').value = selectedShipping.courier;
         document.getElementById('shippingServiceHidden').value = selectedShipping.service;
         document.getElementById('shippingDescriptionHidden').value = selectedShipping.description;
@@ -620,7 +799,161 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         selectedShippingInfo.style.display = 'block';
+        
+        // Update order summary
+        updateOrderSummary();
+        
         console.log('Shipping selected:', selectedShipping);
+    }
+    
+    function updateOrderSummary() {
+        const subtotal = parseInt({{ $totalPrice ?? 0 }});  // Pastikan integer tanpa pembulatan
+        const shippingCost = selectedShipping ? (parseInt(selectedShipping.cost) || 0) : 0;
+        const grandTotal = subtotal + shippingCost;
+        
+        console.log('Update Order Summary:', {
+            subtotal: subtotal,
+            subtotalType: typeof subtotal,
+            subtotalExact: subtotal,
+            shippingCost: shippingCost,
+            shippingCostType: typeof shippingCost,
+            grandTotal: grandTotal,
+            grandTotalType: typeof grandTotal,
+            rawTotalPriceFromPHP: {{ $totalPrice ?? 0 }},
+            selectedShipping: selectedShipping
+        });
+        
+        // Update shipping cost display
+        const shippingCostRow = document.getElementById('shippingCostRow');
+        const shippingCostDisplay = document.getElementById('shippingCostDisplay');
+        const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+        const grandTotalHidden = document.getElementById('grandTotalHidden');
+        
+        if (shippingCost > 0) {
+            shippingCostRow.style.display = 'flex';
+            shippingCostDisplay.textContent = `Rp ${shippingCost.toLocaleString('id-ID')}`;
+        } else {
+            shippingCostRow.style.display = 'none';
+        }
+        
+        // Ensure grandTotal is a valid number
+        if (isNaN(grandTotal) || !isFinite(grandTotal)) {
+            console.error('Grand total is invalid:', {subtotal, shippingCost, grandTotal});
+            grandTotalDisplay.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+            if (grandTotalHidden) grandTotalHidden.value = subtotal;
+        } else {
+            grandTotalDisplay.textContent = `Rp ${grandTotal.toLocaleString('id-ID')}`;
+            if (grandTotalHidden) grandTotalHidden.value = grandTotal;
+        }
+        
+        // Update shipping cost hidden input as well
+        const shippingCostHidden = document.getElementById('shippingCostHidden');
+        if (shippingCostHidden) {
+            shippingCostHidden.value = shippingCost;
+        }
+    }
+    
+    function resetShippingCost() {
+        console.log('Resetting shipping cost...');
+        selectedShipping = null;
+        // Reset hidden inputs
+        document.getElementById('shippingCostHidden').value = '';
+        document.getElementById('shippingCourierHidden').value = '';
+        document.getElementById('shippingServiceHidden').value = '';
+        document.getElementById('shippingDescriptionHidden').value = '';
+        document.getElementById('shippingEtdHidden').value = '';
+        
+        // Hide existing address shipping info
+        const existingAddressShipping = document.getElementById('existingAddressShipping');
+        if (existingAddressShipping) {
+            existingAddressShipping.style.display = 'none';
+        }
+        
+        // Update order summary to show only subtotal
+        updateOrderSummary();
+        console.log('Shipping cost reset complete');
+    }
+    
+    async function autoCalculateShippingForAddress(cityId, cityName) {
+        console.log('Auto-calculating shipping for city:', cityId, cityName);
+        
+        // Show loading indicator in total
+        const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+        const originalText = grandTotalDisplay.textContent;
+        grandTotalDisplay.textContent = 'Menghitung...';
+        
+        try {
+            // Use JNE as default for auto-calculation
+            const requestData = {
+                origin: storeLocation,
+                destination: parseInt(cityId),
+                weight: totalWeight,
+                courier: 'jne'
+            };
+            
+            console.log('Sending request:', requestData);
+            
+            const response = await fetch('/api/shipment/calculate-cost', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            console.log('Response status:', response.status);
+            const data = await response.json();
+            console.log('Response data:', data);
+            
+            if (data.success && data.data.length > 0) {
+                // Data structure: data[0].services[0]
+                const courierData = data.data[0];
+                const firstService = courierData.services[0];
+                
+                selectedShipping = {
+                    cost: parseInt(firstService.cost) || 0,
+                    courier: courierData.courier_code.toUpperCase(),
+                    service: firstService.service,
+                    description: firstService.description,
+                    etd: firstService.etd
+                };
+                
+                console.log('Parsed shipping cost:', selectedShipping.cost, typeof selectedShipping.cost);
+                console.log('Full shipping data:', selectedShipping);
+                
+                // Update hidden form fields (except shipping cost - will be handled by updateOrderSummary)
+                document.getElementById('shippingCourierHidden').value = selectedShipping.courier;
+                document.getElementById('shippingServiceHidden').value = selectedShipping.service;
+                document.getElementById('shippingDescriptionHidden').value = selectedShipping.description;
+                document.getElementById('shippingEtdHidden').value = selectedShipping.etd;
+                
+                // Update order summary
+                updateOrderSummary();
+                
+                // Show shipping info for existing address
+                const existingAddressShipping = document.getElementById('existingAddressShipping');
+                const existingShippingDetails = document.getElementById('existingShippingDetails');
+                
+                existingShippingDetails.innerHTML = `
+                    <p><strong>${selectedShipping.courier} - ${selectedShipping.service}</strong></p>
+                    <p>${selectedShipping.description}</p>
+                    <p>Biaya: <strong>Rp ${selectedShipping.cost.toLocaleString('id-ID')}</strong></p>
+                    <p>Estimasi: <strong>${selectedShipping.etd}</strong></p>
+                `;
+                existingAddressShipping.style.display = 'block';
+                
+                console.log('Auto-selected shipping:', selectedShipping);
+            } else {
+                console.warn('No shipping options available for this address');
+                grandTotalDisplay.textContent = originalText;
+                resetShippingCost();
+            }
+        } catch (error) {
+            console.error('Error auto-calculating shipping:', error);
+            grandTotalDisplay.textContent = originalText;
+            resetShippingCost();
+        }
     }
     
     function showShippingLoader(show) {

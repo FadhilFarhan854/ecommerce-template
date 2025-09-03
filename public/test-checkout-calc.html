@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Checkout Total</title>
+</head>
+<body>
+    <h1>Test Page</h1>
+    <p>Testing JavaScript calculation</p>
+    
+    <div id="result"></div>
+    
+    <script>
+        // Simulate the same calculation as in checkout
+        const totalPrice = 50000; // Test with a known value
+        const shippingCost = 10000;
+        const grandTotal = totalPrice + shippingCost;
+        
+        console.log('Test calculation:', {
+            totalPrice: totalPrice,
+            shippingCost: shippingCost,
+            grandTotal: grandTotal,
+            isNaN: isNaN(grandTotal)
+        });
+        
+        document.getElementById('result').innerHTML = `
+            <p>Total Price: ${totalPrice}</p>
+            <p>Shipping Cost: ${shippingCost}</p>
+            <p>Grand Total: ${grandTotal}</p>
+            <p>Formatted: Rp ${grandTotal.toLocaleString('id-ID')}</p>
+        `;
+    </script>
+</body>
+</html>

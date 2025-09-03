@@ -17,9 +17,11 @@ class Address extends Model
         'kode_pos',
         'kecamatan',
         'provinsi',
+        'provinsi_name',
         'hp',
         'kelurahan',
         'kota',
+        'kota_name',
     ];
 
     public function user()

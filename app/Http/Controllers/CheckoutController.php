@@ -25,8 +25,8 @@ class CheckoutController extends Controller
             return redirect()->back()->with('error', 'Keranjang Anda kosong');
         }
 
-        // Hitung total harga
-        $totalPrice = $cartItems->sum(function ($item) {
+        // Hitung total harga (pastikan integer)
+        $totalPrice = (int) $cartItems->sum(function ($item) {
             return $item->product->price * $item->quantity;
         });
 
@@ -46,6 +46,10 @@ class CheckoutController extends Controller
         // Validasi input
         $rules = [
             'address_option' => 'required|in:existing,new',
+            'shipping_cost' => 'required|numeric|min:0',
+            'shipping_courier' => 'required|string',
+            'shipping_service' => 'required|string',
+            'grand_total' => 'required|numeric|min:0',
         ];
 
         // Tambahkan validasi berdasarkan pilihan alamat
@@ -128,12 +132,40 @@ class CheckoutController extends Controller
                 return $item->product->weight * $item->quantity;
             });
 
+            // Ambil data ongkir dari request
+            $shippingCost = (int) $request->shipping_cost;
+            $shippingCourier = $request->shipping_courier;
+            $shippingService = $request->shipping_service;
+            $shippingDescription = $request->shipping_description ?? '';
+            $shippingEtd = $request->shipping_etd ?? '';
+            
+            // Total keseluruhan (subtotal + ongkir)
+            $grandTotal = $totalPrice + $shippingCost;
+            
+            // Validasi grand total dari frontend
+            $requestGrandTotal = (int) $request->grand_total;
+            
+            // Debug logging
+            \Log::info('Checkout validation:', [
+                'subtotal' => $totalPrice,
+                'shipping_cost_raw' => $request->shipping_cost,
+                'shipping_cost_int' => $shippingCost,
+                'calculated_grand_total' => $grandTotal,
+                'request_grand_total_raw' => $request->grand_total,
+                'request_grand_total_int' => $requestGrandTotal,
+                'match' => $grandTotal === $requestGrandTotal
+            ]);
+            
+            if ($grandTotal !== $requestGrandTotal) {
+                throw new \Exception("Total pembayaran tidak sesuai. Backend: {$grandTotal}, Frontend: {$requestGrandTotal}. Mohon refresh halaman dan coba lagi.");
+            }
+
 
             // Buat order dengan UUID
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'status' => 'pending',
-                'total_price' => $totalPrice,
+                'total_price' => $grandTotal, // Total keseluruhan (subtotal + ongkir)
                 'total_weight' => $totalWeight,
                 'shipping_address' => $shippingAddress,
                 'payment_method' => 'midtrans',
@@ -164,7 +196,9 @@ class CheckoutController extends Controller
                 'success' => true,
                 'message' => 'Checkout berhasil! Silakan lanjutkan pembayaran.',
                 'order_id' => $order->id,
-                'total_price' => $totalPrice,
+                'subtotal' => $totalPrice,
+                'shipping_cost' => $shippingCost,
+                'total_price' => $grandTotal, // Grand total untuk Midtrans
                 'total_weight' => $totalWeight,
                 'snap_token' => $snapToken,
             ]);
