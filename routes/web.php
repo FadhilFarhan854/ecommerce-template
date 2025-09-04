@@ -125,6 +125,16 @@ Route::post('/midtrans/simulate', [CheckoutController::class, 'simulateWebhook']
 Route::middleware('auth')->resource('orders', OrderController::class);
 Route::middleware('auth')->get('/history', [OrderController::class, 'history'])->name('orders.history');
 
+// Order status management routes
+Route::middleware('auth')->group(function () {
+    Route::post('/orders/{id}/update-to-sending', [OrderController::class, 'updateToSending'])->name('orders.update-to-sending');
+    Route::post('/orders/{id}/finish', [OrderController::class, 'finishOrder'])->name('orders.finish');
+    Route::post('/orders/{id}/retry-payment', [OrderController::class, 'retryPayment'])->name('orders.retry-payment');
+});
+
+// Auto cancel pending orders (for scheduler)
+Route::get('/orders/auto-cancel-pending', [OrderController::class, 'autoCancelPendingOrders'])->name('orders.auto-cancel-pending');
+
 // Web routes untuk order items (monolith approach) - requires authentication
 Route::middleware('auth')->resource('order-items', OrderItemController::class);
 

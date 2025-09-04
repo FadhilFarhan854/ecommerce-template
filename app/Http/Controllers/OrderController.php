@@ -48,6 +48,7 @@ class OrderController extends Controller
                 'products' => $products->toArray(),
                 'total_quantity' => $order->items->sum('quantity'),
                 'status' => $order->status,
+                'payment_status' => $order->payment_status,
                 'address' => $order->shipping_address,
                 'total_price' => $order->total_price,
                 'created_at' => $order->created_at->format('d M Y H:i'),
@@ -558,6 +559,7 @@ class OrderController extends Controller
                 'products' => $products->toArray(),
                 'total_quantity' => $order->items->sum('quantity'),
                 'status' => $order->status,
+                'payment_status' => $order->payment_status,
                 'address' => $order->shipping_address,
                 'total_price' => $order->total_price,
                 'created_at' => $order->created_at->format('d M Y H:i'),
@@ -565,5 +567,201 @@ class OrderController extends Controller
         });
 
         return view('orders.history', compact('orders', 'orderData'));
+    }
+
+    /**
+     * Update order status from processing to sending (Admin only)
+     */
+    public function updateToSending(Request $request, $id)
+    {
+        try {
+            $order = Order::findOrFail($id);
+            
+            // Hanya admin yang bisa mengubah ke sending
+            if (Auth::user()->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            // Hanya order dengan status processing yang bisa diubah ke sending
+            if ($order->status !== 'processing') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order status must be processing to change to sending'
+                ], 400);
+            }
+
+            $order->update(['status' => 'sending']);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order status updated to sending',
+                    'data' => $order
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Order status updated to sending');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error updating order status: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Error updating order status');
+        }
+    }
+
+    /**
+     * Finish order (User can mark order as finished when status is sending)
+     */
+    public function finishOrder(Request $request, $id)
+    {
+        try {
+            $order = Order::findOrFail($id);
+            
+            // Pastikan order milik user yang sedang login (kecuali admin)
+            if (!Auth::user()->is_admin && $order->user_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            // Hanya order dengan status sending yang bisa difinish
+            if ($order->status !== 'sending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order status must be sending to finish'
+                ], 400);
+            }
+
+            $order->update(['status' => 'finished']);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order finished successfully',
+                    'data' => $order
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Order finished successfully');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error finishing order: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Error finishing order');
+        }
+    }
+
+    /**
+     * Retry payment for failed orders
+     */
+    public function retryPayment(Request $request, $id)
+    {
+        try {
+            $order = Order::findOrFail($id);
+            
+            // Pastikan order milik user yang sedang login (kecuali admin)
+            if (!Auth::user()->is_admin && $order->user_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            // Hanya order dengan payment_status failed atau pending yang bisa retry
+            if (!in_array($order->payment_status, ['failed', 'pending'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only failed or pending payments can be retried'
+                ], 400);
+            }
+
+            // Generate new Snap Token
+            $midtransService = new \App\Services\MidtransService();
+            $snapToken = $midtransService->getSnapToken($order, $order->items->toArray());
+
+            // Update order dengan snap token baru
+            $order->update([
+                'snap_token' => $snapToken,
+                'payment_status' => 'pending'
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment retry initiated',
+                    'snap_token' => $snapToken,
+                    'data' => $order
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Payment retry initiated');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error retrying payment: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Error retrying payment');
+        }
+    }
+
+    /**
+     * Auto cancel pending orders after 24 hours (called by scheduler)
+     */
+    public function autoCancelPendingOrders()
+    {
+        try {
+            $cutoffTime = now()->subDay(); // 24 hours ago
+            
+            $ordersToCancel = Order::where('status', 'pending')
+                ->where('created_at', '<', $cutoffTime)
+                ->get();
+
+            $cancelledCount = 0;
+            
+            foreach ($ordersToCancel as $order) {
+                // Kembalikan stok produk
+                foreach ($order->items as $item) {
+                    $item->product->increment('stock', $item->quantity);
+                }
+                
+                // Update status order
+                $order->update([
+                    'status' => 'cancelled',
+                    'payment_status' => 'failed'
+                ]);
+                
+                $cancelledCount++;
+            }
+
+            \Log::info("Auto-cancelled {$cancelledCount} pending orders older than 24 hours");
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Auto-cancelled {$cancelledCount} pending orders",
+                'cancelled_count' => $cancelledCount
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error auto-cancelling pending orders: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error auto-cancelling orders: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

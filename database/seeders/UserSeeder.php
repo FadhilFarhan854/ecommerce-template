@@ -20,6 +20,16 @@ class UserSeeder extends Seeder
             'email' => 'test@example.com',
             'email_verified_at' => now(),
             'password' => Hash::make('password123'),
+            'role' => 'customer',
+        ]);
+
+        // Create admin user
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'email_verified_at' => now(),
+            'password' => Hash::make('admin123'),
+            'role' => 'admin',
         ]);
 
         // Create sample addresses for the user

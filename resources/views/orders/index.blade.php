@@ -61,7 +61,9 @@
                                     <td class="px-4 py-2 text-gray-600">{{ $order['address'] ?? 'N/A' }}</td>
                                     <td class="px-4 py-2">
                                         <span class="px-2 py-1 rounded-full text-xs
-                                            @if(($order['status'] ?? '') === 'completed') bg-green-100 text-green-800
+                                            @if(($order['status'] ?? '') === 'finished') bg-green-100 text-green-800
+                                            @elseif(($order['status'] ?? '') === 'processing') bg-blue-100 text-blue-800
+                                            @elseif(($order['status'] ?? '') === 'sending') bg-purple-100 text-purple-800
                                             @elseif(($order['status'] ?? '') === 'pending') bg-yellow-100 text-yellow-800
                                             @elseif(($order['status'] ?? '') === 'cancelled') bg-red-100 text-red-800
                                             @else bg-gray-100 text-gray-800
@@ -174,7 +176,15 @@
             </div>
             
             {{-- Modal Footer --}}
-            <div class="mt-6 flex justify-end">
+            <div class="mt-6 flex justify-between">
+                <div class="flex space-x-2">
+                    {{-- Admin buttons untuk mengubah status --}}
+                    <button id="btnUpdateToSending" onclick="updateOrderStatus('sending')" 
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition duration-200 hidden">
+                        Mark as Sending
+                    </button>
+                </div>
+                
                 <button onclick="closeOrderModal()" 
                     class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md transition duration-200">
                     Close
@@ -185,8 +195,11 @@
 </div>
 
 <script>
+let currentOrder = null;
+
 function openOrderModal(order) {
     console.log('Order data:', order); // Debug log
+    currentOrder = order; // Store current order data
     
     // Show modal
     document.getElementById('orderModal').classList.remove('hidden');
@@ -218,8 +231,14 @@ function openOrderModal(order) {
     statusElement.className = 'mt-1 inline-block px-2 py-1 rounded-full text-xs';
     
     switch(status.toLowerCase()) {
-        case 'completed':
+        case 'finished':
             statusElement.className += ' bg-green-100 text-green-800';
+            break;
+        case 'processing':
+            statusElement.className += ' bg-blue-100 text-blue-800';
+            break;
+        case 'sending':
+            statusElement.className += ' bg-purple-100 text-purple-800';
             break;
         case 'pending':
             statusElement.className += ' bg-yellow-100 text-yellow-800';
@@ -231,6 +250,17 @@ function openOrderModal(order) {
             statusElement.className += ' bg-gray-100 text-gray-800';
     }
     statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    
+    // Show/hide admin buttons based on order status
+    const btnUpdateToSending = document.getElementById('btnUpdateToSending');
+    
+    // Reset all buttons
+    btnUpdateToSending.classList.add('hidden');
+    
+    // Show appropriate buttons based on status
+    if (status.toLowerCase() === 'processing') {
+        btnUpdateToSending.classList.remove('hidden');
+    }
     
     // Display products
     const productsContainer = document.getElementById('modalProducts');
@@ -273,6 +303,48 @@ function openOrderModal(order) {
 
 function closeOrderModal() {
     document.getElementById('orderModal').classList.add('hidden');
+    currentOrder = null;
+}
+
+function updateOrderStatus(newStatus) {
+    if (!currentOrder) return;
+    
+    const orderId = currentOrder.id;
+    if (!orderId) {
+        alert('Order ID not found');
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to change order status to ${newStatus}?`)) {
+        return;
+    }
+    
+    let url = '';
+    if (newStatus === 'sending') {
+        url = `/orders/${orderId}/update-to-sending`;
+    }
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload(); // Refresh page to show updated status
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating order status');
+    });
 }
 
 // Close modal when clicking outside

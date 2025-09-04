@@ -21,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'midtrans/callback',
         ]);
     })
+    ->withCommands([
+        \App\Console\Commands\AutoCancelPendingOrders::class,
+    ])
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
