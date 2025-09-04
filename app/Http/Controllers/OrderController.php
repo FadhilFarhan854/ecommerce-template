@@ -689,7 +689,7 @@ class OrderController extends Controller
 
             // Generate new Snap Token
             $midtransService = new \App\Services\MidtransService();
-            $snapToken = $midtransService->getSnapToken($order, $order->items->toArray());
+            $snapToken = $midtransService->createSnapToken($order);
 
             // Update order dengan snap token baru
             $order->update([
