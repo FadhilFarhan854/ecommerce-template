@@ -325,13 +325,13 @@ function retryPayment() {
     
     const orderId = currentOrder.id;
     if (!orderId) {
-        alert('Order ID not found');
+        console.error('Order ID not found');
         return;
     }
     
-    if (!confirm('Are you sure you want to retry payment for this order?')) {
-        return;
-    }
+    const btnRetryPayment = document.getElementById('btnRetryPayment');
+    btnRetryPayment.disabled = true;
+    btnRetryPayment.textContent = 'Processing...';
     
     fetch(`/orders/${orderId}/retry-payment`, {
         method: 'POST',
@@ -348,31 +348,34 @@ function retryPayment() {
                 // Open Midtrans payment popup
                 snap.pay(data.snap_token, {
                     onSuccess: function(result) {
-                        alert('Payment successful!');
                         location.reload();
                     },
                     onPending: function(result) {
-                        alert('Payment pending. Please complete your payment.');
                         location.reload();
                     },
                     onError: function(result) {
-                        alert('Payment failed. Please try again.');
+                        console.error('Payment failed:', result);
+                        btnRetryPayment.disabled = false;
+                        btnRetryPayment.textContent = 'Retry Payment';
                     },
                     onClose: function() {
-                        console.log('Payment popup closed');
+                        btnRetryPayment.disabled = false;
+                        btnRetryPayment.textContent = 'Retry Payment';
                     }
                 });
             } else {
-                alert(data.message);
                 location.reload();
             }
         } else {
-            alert('Error: ' + data.message);
+            console.error('Error:', data.message);
+            btnRetryPayment.disabled = false;
+            btnRetryPayment.textContent = 'Retry Payment';
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while retrying payment');
+        btnRetryPayment.disabled = false;
+        btnRetryPayment.textContent = 'Retry Payment';
     });
 }
 
@@ -381,13 +384,13 @@ function finishOrder() {
     
     const orderId = currentOrder.id;
     if (!orderId) {
-        alert('Order ID not found');
+        console.error('Order ID not found');
         return;
     }
     
-    if (!confirm('Are you sure you want to mark this order as finished?')) {
-        return;
-    }
+    const btnFinishOrder = document.getElementById('btnFinishOrder');
+    btnFinishOrder.disabled = true;
+    btnFinishOrder.textContent = 'Processing...';
     
     fetch(`/orders/${orderId}/finish`, {
         method: 'POST',
@@ -400,15 +403,17 @@ function finishOrder() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
             location.reload(); // Refresh page to show updated status
         } else {
-            alert('Error: ' + data.message);
+            console.error('Error:', data.message);
+            btnFinishOrder.disabled = false;
+            btnFinishOrder.textContent = 'Finish Order';
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while finishing order');
+        btnFinishOrder.disabled = false;
+        btnFinishOrder.textContent = 'Finish Order';
     });
 }
 

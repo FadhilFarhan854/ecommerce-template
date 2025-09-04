@@ -311,11 +311,7 @@ function updateOrderStatus(newStatus) {
     
     const orderId = currentOrder.id;
     if (!orderId) {
-        alert('Order ID not found');
-        return;
-    }
-    
-    if (!confirm(`Are you sure you want to change order status to ${newStatus}?`)) {
+        console.error('Order ID not found');
         return;
     }
     
@@ -323,6 +319,11 @@ function updateOrderStatus(newStatus) {
     if (newStatus === 'sending') {
         url = `/orders/${orderId}/update-to-sending`;
     }
+    
+    // Disable button and show loading state
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
     
     fetch(url, {
         method: 'POST',
@@ -335,15 +336,17 @@ function updateOrderStatus(newStatus) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
             location.reload(); // Refresh page to show updated status
         } else {
-            alert('Error: ' + data.message);
+            console.error('Error:', data.message);
+            btn.disabled = false;
+            btn.textContent = 'Update to Sending';
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while updating order status');
+        btn.disabled = false;
+        btn.textContent = 'Update to Sending';
     });
 }
 
