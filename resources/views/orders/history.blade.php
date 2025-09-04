@@ -267,9 +267,8 @@ function openOrderModal(order) {
     btnRetryPayment.classList.add('hidden');
     btnFinishOrder.classList.add('hidden');
     
-    // Show appropriate buttons based on status
-    if ((status.toLowerCase() === 'pending' && paymentStatus.toLowerCase() === 'failed') || 
-        (paymentStatus.toLowerCase() === 'failed' || paymentStatus.toLowerCase() === 'pending')) {
+    // Show appropriate buttons based on order status only
+    if (status.toLowerCase() === 'pending' ) {
         btnRetryPayment.classList.remove('hidden');
     }
     
