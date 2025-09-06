@@ -30,6 +30,8 @@
         -moz-appearance: textfield;
     }
 </style>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 @endpush
 
 @section('content')
@@ -172,61 +174,88 @@
 
                     <!-- Product Actions -->
                     @auth
-                        @if($product->stock > 0)
-                            <div class="space-y-4 mb-8">
-                                <!-- Quantity Selector -->
-                                <div class="flex items-center space-x-4">
-                                    <label class="text-sm font-medium text-gray-700">Jumlah:</label>
-                                    <div class="flex items-center border border-gray-300 rounded-lg">
-                                        <button type="button" 
-                                                onclick="decreaseQuantity()" 
-                                                class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-l-lg transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                                            </svg>
-                                        </button>
-                                        <input type="number" 
-                                               id="quantity" 
-                                               value="1" 
-                                               min="1" 
-                                               max="{{ $product->stock }}" 
-                                               class="w-16 px-3 py-2 text-center border-0 focus:ring-0 quantity-input bg-white">
-                                        <button type="button" 
-                                                onclick="increaseQuantity()" 
-                                                class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-r-lg transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <!-- Action Buttons -->
+                        @if(auth()->user()->role === 'admin')
+                            <!-- Admin Actions -->
+                            <div class="mb-8">
                                 <div class="flex space-x-4">
-                                    <button onclick="addToCart({{ $product->id }})" 
-                                            class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center">
+                                    <a href="{{ route('products.edit', $product) }}" 
+                                       class="flex-1 bg-yellow-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center">
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 4M7 13l2.5 4m6 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
-                                        Tambah ke Keranjang
-                                    </button>
-                                    <button class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                        </svg>
-                                        Beli Sekarang
-                                    </button>
+                                        Edit Produk
+                                    </a>
+                                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="flex-1">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                onclick="return confirm('Yakin ingin menghapus produk ini?')"
+                                                class="w-full bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            Hapus Produk
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         @else
-                            <div class="mb-8">
-                                <button disabled class="w-full bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold cursor-not-allowed flex items-center justify-center">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                    Stok Habis
-                                </button>
-                            </div>
+                            @if($product->stock > 0)
+                                <div class="space-y-4 mb-8">
+                                    <!-- Quantity Selector -->
+                                    <div class="flex items-center space-x-4">
+                                        <label class="text-sm font-medium text-gray-700">Jumlah:</label>
+                                        <div class="flex items-center border border-gray-300 rounded-lg">
+                                            <button type="button" 
+                                                    onclick="decreaseQuantity()" 
+                                                    class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-l-lg transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                                </svg>
+                                            </button>
+                                            <input type="number" 
+                                                   id="quantity" 
+                                                   value="1" 
+                                                   min="1" 
+                                                   max="{{ $product->stock }}" 
+                                                   class="w-16 px-3 py-2 text-center border-0 focus:ring-0 quantity-input bg-white">
+                                            <button type="button" 
+                                                    onclick="increaseQuantity()" 
+                                                    class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-r-lg transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="flex space-x-4">
+                                        <button onclick="addToCart({{ $product->id }})" 
+                                                class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 4M7 13l2.5 4m6 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"></path>
+                                            </svg>
+                                            Tambah ke Keranjang
+                                        </button>
+                                        <button class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                            </svg>
+                                            Beli Sekarang
+                                        </button>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="mb-8">
+                                    <button disabled class="w-full bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold cursor-not-allowed flex items-center justify-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Stok Habis
+                                    </button>
+                                </div>
+                            @endif
                         @endif
                     @else
                         <div class="mb-8">
@@ -238,36 +267,6 @@
                                 Login untuk Membeli
                             </a>
                         </div>
-                    @endauth
-
-                    <!-- Admin Actions -->
-                    @auth
-                        @if(auth()->user()->role === 'admin')
-                            <div class="border-t pt-6 mt-6">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Panel Admin</h3>
-                                <div class="flex space-x-3">
-                                    <a href="{{ route('products.edit', $product) }}" 
-                                       class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-colors">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                        </svg>
-                                        Edit Produk
-                                    </a>
-                                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" 
-                                                onclick="return confirm('Yakin ingin menghapus produk ini?')"
-                                                class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                            Hapus Produk
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        @endif
                     @endauth
 
                     <!-- Additional Info -->
@@ -297,6 +296,38 @@
                     <p class="text-gray-700 leading-relaxed text-lg">{{ $product->description }}</p>
                 </div>
             </div>
+
+            <!-- Sales Trend Chart for Admin -->
+            @auth
+                @if(auth()->user()->role === 'admin')
+                    <div class="border-t border-gray-200 px-6 lg:px-8 py-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Trend Penjualan Produk</h2>
+                        <div class="bg-white rounded-lg border border-gray-200 p-6">
+                            <canvas id="salesChart" width="400" height="200"></canvas>
+                        </div>
+                        
+                        <!-- Sales Statistics -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <div class="text-2xl font-bold text-blue-600">{{ $salesData['total_sold'] ?? 0 }}</div>
+                                <div class="text-sm text-gray-600">Total Terjual</div>
+                            </div>
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <div class="text-2xl font-bold text-green-600">Rp {{ number_format($salesData['total_revenue'] ?? 0, 0, ',', '.') }}</div>
+                                <div class="text-sm text-gray-600">Total Pendapatan</div>
+                            </div>
+                            <div class="bg-yellow-50 rounded-lg p-4">
+                                <div class="text-2xl font-bold text-yellow-600">{{ $salesData['this_month'] ?? 0 }}</div>
+                                <div class="text-sm text-gray-600">Bulan Ini</div>
+                            </div>
+                            <div class="bg-purple-50 rounded-lg p-4">
+                                <div class="text-2xl font-bold text-purple-600">{{ number_format($salesData['avg_monthly'] ?? 0, 1) }}</div>
+                                <div class="text-sm text-gray-600">Rata-rata/Bulan</div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endauth
 
             <!-- Reviews Section -->
             <div id="reviews" class="border-t border-gray-200 px-6 lg:px-8 py-8">
@@ -382,11 +413,70 @@
                                         </div>
                                     </div>
                                     
-                                
+                                    <!-- Admin Actions for Reviews -->
+                                    @auth
+                                        @if(auth()->user()->role === 'admin')
+                                            <div class="flex space-x-2">
+                                                <button onclick="editReview({{ $review->id }}, '{{ addslashes($review->review) }}', {{ $review->rating }})" 
+                                                        class="inline-flex items-center px-3 py-1.5 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-colors">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                    Edit
+                                                </button>
+                                                <form action="{{ route('admin.reviews.destroy', $review) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" 
+                                                            onclick="return confirm('Yakin ingin menghapus review ini?')"
+                                                            class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        </svg>
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @endif
+                                    @endauth
                                 </div>
                                 
-                                <div class="text-gray-700 leading-relaxed">
+                                <div class="text-gray-700 leading-relaxed" id="review-text-{{ $review->id }}">
                                     {{ $review->review }}
+                                </div>
+                                
+                                <!-- Edit Form (Hidden by default) -->
+                                <div id="edit-form-{{ $review->id }}" class="hidden mt-4">
+                                    <form action="{{ route('admin.reviews.update', $review) }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                                                <div class="flex space-x-2">
+                                                    @for($i = 1; $i <= 5; $i++)
+                                                        <button type="button" onclick="setRating({{ $review->id }}, {{ $i }})" 
+                                                                class="rating-star-{{ $review->id }} text-2xl text-gray-300 hover:text-yellow-400 transition-colors">
+                                                            ★
+                                                        </button>
+                                                    @endfor
+                                                </div>
+                                                <input type="hidden" name="rating" id="rating-{{ $review->id }}" value="{{ $review->rating }}">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Review</label>
+                                                <textarea name="review" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">{{ $review->review }}</textarea>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                                                    Simpan
+                                                </button>
+                                                <button type="button" onclick="cancelEdit({{ $review->id }})" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+                                                    Batal
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         @endforeach
@@ -466,22 +556,109 @@
 
 @push('scripts')
 <script>
+// Initialize Sales Chart for Admin
+@auth
+@if(auth()->user()->role === 'admin')
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('salesChart');
+    if (ctx) {
+        // Sample data - replace with actual data from backend
+        const salesData = {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+                label: 'Penjualan',
+                data: {!! json_encode($chartData ?? [0, 5, 3, 8, 12, 7, 15, 10, 9, 14, 11, 16]) !!},
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        };
+
+        new Chart(ctx, {
+            type: 'line',
+            data: salesData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Trend Penjualan Bulanan'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+@endif
+@endauth
+
+// Review Management Functions for Admin
+function editReview(reviewId, reviewText, rating) {
+    // Hide review text and show edit form
+    document.getElementById('review-text-' + reviewId).style.display = 'none';
+    document.getElementById('edit-form-' + reviewId).classList.remove('hidden');
+    
+    // Set current rating stars
+    setRatingDisplay(reviewId, rating);
+}
+
+function cancelEdit(reviewId) {
+    // Show review text and hide edit form
+    document.getElementById('review-text-' + reviewId).style.display = 'block';
+    document.getElementById('edit-form-' + reviewId).classList.add('hidden');
+}
+
+function setRating(reviewId, rating) {
+    document.getElementById('rating-' + reviewId).value = rating;
+    setRatingDisplay(reviewId, rating);
+}
+
+function setRatingDisplay(reviewId, rating) {
+    const stars = document.querySelectorAll('.rating-star-' + reviewId);
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.remove('text-gray-300');
+            star.classList.add('text-yellow-400');
+        } else {
+            star.classList.remove('text-yellow-400');
+            star.classList.add('text-gray-300');
+        }
+    });
+}
+
 // Quantity controls
 function increaseQuantity() {
     const input = document.getElementById('quantity');
-    const max = parseInt(input.getAttribute('max'));
-    const current = parseInt(input.value);
-    if (current < max) {
-        input.value = current + 1;
+    if (input) {
+        const max = parseInt(input.getAttribute('max'));
+        const current = parseInt(input.value);
+        if (current < max) {
+            input.value = current + 1;
+        }
     }
 }
 
 function decreaseQuantity() {
     const input = document.getElementById('quantity');
-    const min = parseInt(input.getAttribute('min'));
-    const current = parseInt(input.value);
-    if (current > min) {
-        input.value = current - 1;
+    if (input) {
+        const min = parseInt(input.getAttribute('min'));
+        const current = parseInt(input.value);
+        if (current > min) {
+            input.value = current - 1;
+        }
     }
 }
 
@@ -543,7 +720,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Cart functions
 async function addToCart(productId) {
-    const quantity = parseInt(document.getElementById('quantity').value) || 1;
+    const quantityInput = document.getElementById('quantity');
+    const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
     
     try {
         const formData = new FormData();

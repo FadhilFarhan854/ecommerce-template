@@ -368,6 +368,47 @@ class ProductController extends Controller
                     ->limit(4)
                     ->get();
 
-        return view('products.show', compact('product', 'relatedProducts'));
+        // Sales data for admin
+        $salesData = [];
+        $chartData = [];
+        
+        if (auth()->check() && auth()->user()->role === 'admin') {
+            // Get sales data from order_items
+            $orderItems = \App\Models\OrderItem::where('product_id', $product->id)
+                ->with('order')
+                ->get();
+            
+            $totalSold = $orderItems->sum('quantity');
+            $totalRevenue = $orderItems->sum(function($item) {
+                return $item->quantity * $item->price;
+            });
+            
+            // Current month sales
+            $thisMonth = $orderItems->filter(function($item) {
+                return $item->order && $item->order->created_at->isCurrentMonth();
+            })->sum('quantity');
+            
+            // Monthly sales for chart (last 12 months)
+            $monthlySales = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $month = now()->subMonths($i);
+                $sales = $orderItems->filter(function($item) use ($month) {
+                    return $item->order && 
+                           $item->order->created_at->format('Y-m') === $month->format('Y-m');
+                })->sum('quantity');
+                $monthlySales[] = $sales;
+            }
+            
+            $salesData = [
+                'total_sold' => $totalSold,
+                'total_revenue' => $totalRevenue,
+                'this_month' => $thisMonth,
+                'avg_monthly' => $totalSold > 0 ? $totalSold / 12 : 0
+            ];
+            
+            $chartData = $monthlySales;
+        }
+
+        return view('products.show', compact('product', 'relatedProducts', 'salesData', 'chartData'));
     }
 }

@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ForceJsonResponse::class,
         ]);
         
+        // Register admin middleware
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        ]);
+        
         // Exclude Midtrans webhook from CSRF protection
         $middleware->validateCsrfTokens(except: [
             'midtrans/callback',

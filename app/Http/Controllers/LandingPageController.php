@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Banner;
 
 class LandingPageController extends Controller
 {
@@ -15,6 +16,10 @@ class LandingPageController extends Controller
                 return (object) $product;
             });
         }
+
+        // Get active banners
+        $banners = Banner::where('status', true)->latest()->get();
+
         $pageData = [
             'hero' => [
                 'slides' => [
@@ -51,6 +56,6 @@ class LandingPageController extends Controller
         ];
 
         
-        return view('welcome', compact('products', 'pageData'));
+        return view('welcome', compact('products', 'pageData', 'banners'));
     }
 }

@@ -128,7 +128,25 @@
 <!-- Hero Section with Slider -->
 <section id="home" class="relative h-96 md:h-[500px] overflow-hidden">
     <div class="slider relative w-full h-full">
-        @if(isset($pageData['hero']['slides']))
+        @if($banners && $banners->count() > 0)
+            @foreach($banners as $index => $banner)
+                <div class="slide absolute inset-0 flex items-center justify-center {{ $index == 0 ? 'active' : '' }}">
+                    <img src="{{ asset('storage/' . $banner->image) }}" 
+                         alt="Banner {{ $loop->iteration }}" 
+                         class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                        <div class="text-center text-white px-4">
+                            <h2 class="text-3xl md:text-5xl font-bold mb-4 drop-shadow-lg">Banner {{ $loop->iteration }}</h2>
+                            <p class="text-lg md:text-xl mb-6 max-w-2xl drop-shadow-lg">Temukan produk berkualitas dengan harga terbaik</p>
+                            <a href="{{ route('products.catalog') }}" 
+                               class="inline-block px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-300">
+                                Belanja Sekarang
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        @elseif(isset($pageData['hero']['slides']))
             @foreach($pageData['hero']['slides'] as $index => $slide)
                 <div class="slide absolute inset-0 flex items-center justify-center {{ $index == 0 ? 'active' : '' }}" 
                      style="background: {{ $slide['background'] }};">
@@ -190,7 +208,11 @@
     
     <!-- Slider Dots -->
     <div class="slider-nav absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
-        @if(isset($pageData['hero']['slides']))
+        @if($banners && $banners->count() > 0)
+            @foreach($banners as $index => $banner)
+                <button class="slider-dot w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-75 transition-all duration-300 {{ $index == 0 ? 'active bg-opacity-100' : '' }}"></button>
+            @endforeach
+        @elseif(isset($pageData['hero']['slides']))
             @foreach($pageData['hero']['slides'] as $index => $slide)
                 <button class="slider-dot w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-75 transition-all duration-300 {{ $index == 0 ? 'active bg-opacity-100' : '' }}"></button>
             @endforeach

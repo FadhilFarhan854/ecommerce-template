@@ -89,9 +89,9 @@
                                         </div>
                                         <div class="flex space-x-1">
                                             
-                                            <a href="{{ route('products.edit', $product) }}" 
+                                            <a href="{{ route('products.show', $product) }}" 
                                                 class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded text-center transition duration-200">
-                                                Edit
+                                                Details
                                             </a>
                                             <form action="{{ route('products.destroy', $product) }}" method="POST" class="flex-1">
                                                 @csrf

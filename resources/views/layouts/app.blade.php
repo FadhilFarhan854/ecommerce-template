@@ -127,6 +127,15 @@
                                         History Pembelian
                                     </a>
                                     
+                                    @if(auth()->check() && auth()->user()->role === 'admin')
+                                    <a href="{{ route('finance.index') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                        <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                        </svg>
+                                        Finance Management
+                                    </a>
+                                    @endif
+                                    
                                     <div class="border-t border-gray-200 mt-2 pt-2">
                                         <form method="POST" action="{{ route('logout') }}">
                                             @csrf

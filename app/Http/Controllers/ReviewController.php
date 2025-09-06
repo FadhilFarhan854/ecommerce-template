@@ -25,4 +25,36 @@ class ReviewController extends Controller
 
         return redirect()->back()->with('success', 'Review berhasil dikirim!');
     }
+
+    public function update(Request $request, Review $review)
+    {
+        // Check if user is admin
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized');
+        }
+
+        $request->validate([
+            'review' => 'required|string',
+            'rating' => 'required|integer|min:1|max:5',
+        ]);
+
+        $review->update([
+            'review' => $request->review,
+            'rating' => $request->rating,
+        ]);
+
+        return redirect()->back()->with('success', 'Review berhasil diupdate!');
+    }
+
+    public function destroy(Review $review)
+    {
+        // Check if user is admin
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized');
+        }
+
+        $review->delete();
+
+        return redirect()->back()->with('success', 'Review berhasil dihapus!');
+    }
 }

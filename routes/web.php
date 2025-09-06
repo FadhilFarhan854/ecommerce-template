@@ -11,6 +11,9 @@ use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BannerController;
+use App\Http\Controllers\FAQController;
+use App\Http\Controllers\FinanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingPageController::class, 'index'])->name('home');
@@ -80,6 +83,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/users-bulk-action', [UserController::class, 'bulkAction'])->name('users.bulk-action');
 });
 
+// Web routes untuk banner management - requires authentication
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('banners', BannerController::class);
+});
+
 // Web routes untuk cart (monolith approach) - requires authentication
 Route::middleware('auth')->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -117,6 +125,12 @@ Route::middleware('auth')->get('/history', [OrderController::class, 'history'])-
 // Route untuk review produk
 Route::middleware('auth')->post('/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
 
+// Route untuk admin review management
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::put('/reviews/{review}', [\App\Http\Controllers\ReviewController::class, 'update'])->name('reviews.update');
+    Route::delete('/reviews/{review}', [\App\Http\Controllers\ReviewController::class, 'destroy'])->name('reviews.destroy');
+});
+
 // Web routes untuk order items (monolith approach) - requires authentication
 Route::middleware('auth')->resource('order-items', OrderItemController::class);
 
@@ -124,3 +138,15 @@ Route::middleware('auth')->resource('order-items', OrderItemController::class);
 Route::get('/shipment/example', function () {
     return view('shipment.example');
 })->name('shipment.example');
+
+Route::resource('faqs', FAQController::class);
+
+// Finance routes - Admin only
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::resource('finance', FinanceController::class)->except(['show', 'create']);
+});
+
+// Finance view for admin (read-only access)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index')->middleware('admin');
+});

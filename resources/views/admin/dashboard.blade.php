@@ -70,6 +70,7 @@
                     </div>
                 </div>
             </div>
+            
         </div>
 
         <!-- Alert for Low Stock -->
@@ -99,7 +100,20 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Sales Chart -->
             <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Sales Trend (Last 30 Days)</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900" id="salesChartTitle">Sales Trend (Last 30 Days)</h3>
+                    <div class="flex bg-gray-100 rounded-lg p-1">
+                        <button id="dailyBtn" class="px-3 py-1 text-sm font-medium text-gray-700 bg-white rounded-md shadow-sm transition-all duration-200">
+                            Daily
+                        </button>
+                        <button id="monthlyBtn" class="px-3 py-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all duration-200">
+                            Monthly
+                        </button>
+                        <button id="yearlyBtn" class="px-3 py-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all duration-200">
+                            Yearly
+                        </button>
+                    </div>
+                </div>
                 <div class="h-64">
                     <canvas id="salesChart"></canvas>
                 </div>
@@ -120,7 +134,7 @@
                 <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
             </div>
             <div class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <a href="{{ route('products.index') }}" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                         <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
@@ -150,6 +164,34 @@
                             <p class="text-sm text-gray-600">View and manage users</p>
                         </div>
                     </a>
+
+                    <a href="{{ route('admin.banners.index') }}" class="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                        <svg class="w-8 h-8 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <div>
+                            <p class="font-medium text-gray-900">Manage Banners</p>
+                            <p class="text-sm text-gray-600">Add, edit, or delete banners</p>
+                        </div>
+                    </a>
+                    <a href="/faqs" class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <svg class="w-8 h-8 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4C9.243 4 7 6.243 7 9h2c0-1.654 1.346-3 3-3s3 1.346 3 3c0 1.069-.454 1.465-1.481 2.255-.382.294-.813.626-1.226 1.038C10.981 13.604 10.995 14.897 11 15v2h2v-2.009c0-.024.023-.601.707-1.284.32-.32.682-.598 1.031-.867C15.798 12.024 17 11.1 17 9c0-2.757-2.243-5-5-5zm-1 14h2v2h-2z"></path>
+                        </svg>
+                        <div>
+                            <p class="font-medium text-gray-900">Manage FAQs</p>
+                            <p class="text-sm text-gray-600">Add, edit, or delete FAQs</p>
+                        </div>
+                    </a>
+                    <a href="{{ route('orders.index') }}" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                        <svg class="w-8 h-8 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d=""></path>
+                        </svg>
+                        <div>
+                            <p class="font-medium text-gray-900">Finance</p>
+                            <p class="text-sm text-gray-600">Check and manage finances</p>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -160,34 +202,101 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
 // Sales Chart Data
-const salesData = @json($sellingChartData);
-const salesLabels = Object.keys(salesData);
-const salesValues = Object.values(salesData);
+const dailySalesData = @json($sellingChartData);
+const monthlySalesData = @json($monthlySalesData);
+const yearlySalesData = @json($yearlySalesData);
 
-// Create Sales Chart
-const salesCtx = document.getElementById('salesChart').getContext('2d');
-new Chart(salesCtx, {
-    type: 'line',
-    data: {
-        labels: salesLabels,
-        datasets: [{
-            label: 'Items Sold',
-            data: salesValues,
-            borderColor: 'rgb(59, 130, 246)',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            tension: 0.4,
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true
+let currentChart = null;
+let currentPeriod = 'daily';
+
+// Initialize Sales Chart
+function initSalesChart(period = 'daily') {
+    let data, labels, values, title;
+    
+    switch(period) {
+        case 'monthly':
+            data = monthlySalesData;
+            title = 'Sales Trend (Last 12 Months)';
+            break;
+        case 'yearly':
+            data = yearlySalesData;
+            title = 'Sales Trend (Last 5 Years)';
+            break;
+        default:
+            data = dailySalesData;
+            title = 'Sales Trend (Last 30 Days)';
+    }
+    
+    labels = Object.keys(data);
+    values = Object.values(data);
+    
+    // Update title
+    document.getElementById('salesChartTitle').textContent = title;
+    
+    // Destroy existing chart if it exists
+    if (currentChart) {
+        currentChart.destroy();
+    }
+    
+    // Create new chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    currentChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Items Sold',
+                data: values,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             }
         }
-    }
+    });
+}
+
+// Button event handlers
+function setActiveButton(activeBtn) {
+    // Remove active class from all buttons
+    document.getElementById('dailyBtn').className = 'px-3 py-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all duration-200';
+    document.getElementById('monthlyBtn').className = 'px-3 py-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all duration-200';
+    document.getElementById('yearlyBtn').className = 'px-3 py-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all duration-200';
+    
+    // Add active class to clicked button
+    activeBtn.className = 'px-3 py-1 text-sm font-medium text-gray-700 bg-white rounded-md shadow-sm transition-all duration-200';
+}
+
+document.getElementById('dailyBtn').addEventListener('click', function() {
+    setActiveButton(this);
+    currentPeriod = 'daily';
+    initSalesChart('daily');
+});
+
+document.getElementById('monthlyBtn').addEventListener('click', function() {
+    setActiveButton(this);
+    currentPeriod = 'monthly';
+    initSalesChart('monthly');
+});
+
+document.getElementById('yearlyBtn').addEventListener('click', function() {
+    setActiveButton(this);
+    currentPeriod = 'yearly';
+    initSalesChart('yearly');
+});
+
+// Initialize chart on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initSalesChart('daily');
 });
 
 // Order Status Chart Data

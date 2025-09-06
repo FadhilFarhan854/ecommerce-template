@@ -104,6 +104,7 @@ return [
             ['text' => 'Tentang', 'url' => '/#about', 'anchor' => '#about'],
             ['text' => 'Produk', 'url' => '/catalog', 'anchor' => '#catalog'],
             ['text' => 'Kontak', 'url' => '#contact', 'anchor' => '#contact'],
+            ['text' => 'FAQ', 'url' => '/faq', 'anchor' => '#faq'],
         ],
         'admin_menu' =>[
             ['text' => 'Dashboard', 'url' => '/admin-dashboard', 'anchor' => '#dashboard'],
