@@ -46,6 +46,7 @@
                     <select id="sort" name="sort"
                             class="mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="created_at" {{ $sort == 'created_at' ? 'selected' : '' }}>Terbaru</option>
+                        <option value="popular" {{ $sort == 'popular' ? 'selected' : '' }}>Terpopuler</option>
                         <option value="name" {{ $sort == 'name' ? 'selected' : '' }}>Nama A-Z</option>
                         <option value="price" {{ $sort == 'price' ? 'selected' : '' }}>Harga</option>
                     </select>
@@ -86,7 +87,14 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             @foreach($products as $product)
                 <div class="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden">
-                    <div class="h-52 bg-gray-100 flex items-center justify-center">
+                    <div class="h-52 bg-gray-100 flex items-center justify-center relative">
+                        <!-- Badge Terpopuler -->
+                        @if($sort == 'popular' && isset($product->order_items_count) && $product->order_items_count > 0)
+                            <div class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
+                                🔥 populer
+                            </div>
+                        @endif
+                        
                         @if($product->images && $product->images->count() > 0)
                             <img src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                         @elseif($product->image)
@@ -106,14 +114,22 @@
                         </div>
                         <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ $product->name }}</h3>
                         <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ Str::limit($product->description, 100) }}</p>
+                        
+                        <!-- Info popularitas jika sorting berdasarkan popular -->
+                        @if($sort == 'popular' && isset($product->order_items_count))
+                            <div class="text-xs text-orange-600 mb-2">
+                                📊 Terjual: {{ $product->order_items_count }} kali
+                            </div>
+                        @endif
+                        
                         <div class="text-green-600 font-bold text-lg mb-3">
                             Rp {{ number_format($product->price, 0, ',', '.') }}
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="openModal({{ $product->id }})"
-                               class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition">
+                            <a href="{{ route('products.show-detail', $product) }}"
+                               class="flex-1 px-4 py-2 w-full justify-center text-center bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition">
                                 Lihat Detail
-                            </button>
+                            </a>
                             @auth
                                 <button onclick="addToCart({{ $product->id }})"
                                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition">

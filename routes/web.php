@@ -114,6 +114,9 @@ Route::post('/midtrans/simulate', [CheckoutController::class, 'simulateWebhook']
 Route::middleware('auth')->resource('orders', OrderController::class);
 Route::middleware('auth')->get('/history', [OrderController::class, 'history'])->name('orders.history');
 
+// Route untuk review produk
+Route::middleware('auth')->post('/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
+
 // Web routes untuk order items (monolith approach) - requires authentication
 Route::middleware('auth')->resource('order-items', OrderItemController::class);
 

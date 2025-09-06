@@ -41,4 +41,21 @@ class Product extends Model
     {
         return $this->hasMany(Image::class);
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    // Helper method untuk menghitung rata-rata rating
+    public function getAverageRatingAttribute()
+    {
+        return $this->reviews()->avg('rating') ?? 0;
+    }
+
+    // Helper method untuk menghitung jumlah review
+    public function getReviewCountAttribute()
+    {
+        return $this->reviews()->count();
+    }
 }

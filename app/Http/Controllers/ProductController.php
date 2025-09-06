@@ -128,7 +128,7 @@ class ProductController extends Controller
      */
     public function show(Product $product, Request $request)
     {
-        $product->load(['category', 'images']);
+        $product->load(['category', 'images', 'reviews.user']);
         
         // If API request
         if ($request->wantsJson() || $request->is('api/*')) {
@@ -137,9 +137,16 @@ class ProductController extends Controller
                 'data' => $product
             ]);
         }
+
+        // Get related products
+        $relatedProducts = Product::with(['category', 'images'])
+                    ->where('category_id', $product->category_id)
+                    ->where('id', '!=', $product->id)
+                    ->limit(4)
+                    ->get();
         
         // If web request (monolith)
-        return view('products.show', compact('product'));
+        return view('products.show', compact('product', 'relatedProducts'));
     }
 
     /**
@@ -161,71 +168,104 @@ class ProductController extends Controller
      */
     public function update(ProductRequest $request, Product $product)
     {
-        $productData = [
-            'category_id' => $request->category_id,
-            'name' => $request->name,
-            'slug' => $request->slug,
-            'description' => $request->description,
-            'price' => $request->price,
-            'stock' => $request->stock,
-        ];
+        try {
+            $productData = [
+                'category_id' => $request->category_id,
+                'name' => $request->name,
+                'slug' => $request->slug,
+                'description' => $request->description,
+                'price' => $request->price,
+                'stock' => $request->stock,
+                'weight' => $request->weight,
+            ];
 
-        $product->update($productData);
+            $product->update($productData);
 
-        // Optionally, remove old images if requested
-        if ($request->has('remove_image_ids')) {
-            $ids = $request->input('remove_image_ids');
-            if (is_array($ids)) {
-                foreach ($ids as $id) {
-                    $image = $product->images()->find($id);
-                    if ($image) {
-                        // Delete file if stored locally
-                        if (str_starts_with($image->url, '/storage/')) {
-                            $oldImagePath = str_replace('/storage/', '', $image->url);
-                            if (file_exists(storage_path('app/public/' . $oldImagePath))) {
-                                unlink(storage_path('app/public/' . $oldImagePath));
+            // Optionally, remove old images if requested
+            if ($request->has('remove_image_ids')) {
+                $ids = $request->input('remove_image_ids');
+                if (is_array($ids)) {
+                    foreach ($ids as $id) {
+                        $image = $product->images()->find($id);
+                        if ($image) {
+                            // Delete file if stored locally
+                            if (str_starts_with($image->url, '/storage/')) {
+                                $oldImagePath = str_replace('/storage/', '', $image->url);
+                                if (file_exists(storage_path('app/public/' . $oldImagePath))) {
+                                    unlink(storage_path('app/public/' . $oldImagePath));
+                                }
                             }
+                            $image->delete();
                         }
-                        $image->delete();
                     }
                 }
             }
-        }
 
-        // Handle new image uploads
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $imageFile) {
-                $imagePath = $imageFile->store('products', 'public');
-                $product->images()->create(['url' => '/storage/' . $imagePath]);
-            }
-        }
-
-        // Handle new image URLs
-        if ($request->filled('image_urls')) {
-            $urls = $request->input('image_urls');
-            if (is_array($urls)) {
-                foreach ($urls as $url) {
-                    $product->images()->create(['url' => $url]);
+            // Handle new image uploads
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $imageFile) {
+                    if ($imageFile->isValid()) {
+                        try {
+                            $imagePath = $imageFile->store('products', 'public');
+                            $product->images()->create(['url' => '/storage/' . $imagePath]);
+                        } catch (\Exception $e) {
+                            \Log::error('Failed to upload image: ' . $e->getMessage());
+                            // Continue with other images
+                        }
+                    }
                 }
-            } else {
-                $product->images()->create(['url' => $urls]);
             }
+
+            // Handle new image URLs (comma-separated string)
+            if ($request->filled('image_urls')) {
+                $imageUrls = $request->input('image_urls');
+                // Split by comma and clean up
+                $urls = array_map('trim', explode(',', $imageUrls));
+                $urls = array_filter($urls, function($url) {
+                    return !empty($url) && filter_var($url, FILTER_VALIDATE_URL);
+                });
+                
+                foreach ($urls as $url) {
+                    try {
+                        $product->images()->create(['url' => $url]);
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to save image URL: ' . $e->getMessage());
+                        // Continue with other URLs
+                    }
+                }
+            }
+
+            $product->load(['category', 'images']);
+
+            // If API request
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product updated successfully',
+                    'data' => $product
+                ]);
+            }
+
+            // If web request (monolith)
+            return redirect()->route('products.index')
+                            ->with('success', 'Product updated successfully');
+                            
+        } catch (\Exception $e) {
+            \Log::error('Product update failed: ' . $e->getMessage());
+            
+            // If API request
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update product: ' . $e->getMessage()
+                ], 500);
+            }
+
+            // If web request (monolith)
+            return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Failed to update product. Please try again.');
         }
-
-        $product->load(['category', 'images']);
-
-        // If API request
-        if ($request->wantsJson() || $request->is('api/*')) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Product updated successfully',
-                'data' => $product
-            ]);
-        }
-
-        // If web request (monolith)
-        return redirect()->route('products.index')
-                        ->with('success', 'Product updated successfully');
     }
 
     /**
@@ -297,9 +337,15 @@ class ProductController extends Controller
         }
 
         // Sorting
-        $allowedSorts = ['name', 'price', 'created_at'];
+        $allowedSorts = ['name', 'price', 'created_at', 'popular'];
         if (in_array($sort, $allowedSorts)) {
-            $query->orderBy($sort, $order);
+            if ($sort === 'popular') {
+                // Sort berdasarkan popularitas (jumlah item terjual)
+                $query->withCount('orderItems')
+                      ->orderBy('order_items_count', $order);
+            } else {
+                $query->orderBy($sort, $order);
+            }
         }
 
         $products = $query->with(['category', 'images'])->paginate($perPage);
@@ -315,7 +361,7 @@ class ProductController extends Controller
      */
     public function showProduct(Product $product)
     {
-        $product->load(['category', 'images']);
+        $product->load(['category', 'images', 'reviews.user']);
         $relatedProducts = Product::with(['category', 'images'])
                     ->where('category_id', $product->category_id)
                     ->where('id', '!=', $product->id)

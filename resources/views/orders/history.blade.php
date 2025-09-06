@@ -79,10 +79,10 @@
                                     </td>
                                     <td class="px-4 py-2">
                                         <div class="flex justify-center space-x-2">
-                                            <button onclick="openOrderModal({{ json_encode($order) }})" 
+                                            <a href="{{ route('orders.show', $order['id']) }}" 
                                                class="px-3 py-1 rounded-md text-sm bg-blue-100 text-blue-700 hover:bg-blue-200">
-                                                View
-                                            </button>
+                                                Show
+                                            </a>
                                             @if(isset($order['id']))
                                                 {{-- <a href="{{ route('orders.edit', $order['id']) }}" 
                                                    class="px-3 py-1 rounded-md text-sm bg-yellow-100 text-yellow-700 hover:bg-yellow-200">

@@ -48,34 +48,6 @@
         showSlide(0);
     });
 
-    // Modal functions
-    function openModal(id) {
-        const modal = document.getElementById('modal-' + id);
-        if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-        }
-    }
-    
-    function closeModal(id) {
-        const modal = document.getElementById('modal-' + id);
-        if (modal) {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.body.style.overflow = 'auto';
-        }
-    }
-    
-    // Close modal when clicking outside
-    window.addEventListener('click', function(e) {
-        if (e.target.classList.contains('bg-black') && e.target.classList.contains('bg-opacity-50')) {
-            e.target.classList.add('hidden');
-            e.target.classList.remove('flex');
-            document.body.style.overflow = 'auto';
-        }
-    });
-
     // Toast notification functions
     function showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
@@ -139,39 +111,10 @@
         }
     }
     
-    function addToCartFromModal(productId) {
-        const quantityInput = document.getElementById('quantity-' + productId);
-        const quantity = parseInt(quantityInput.value) || 1;
-        
-        addToCart(productId, quantity).then(() => {
-            closeModal(productId);
-        });
-    }
-
     function showLoginMessage() {
         showToast('Silakan daftar di halaman katalog untuk melihat produk yang tersedia!', 'info');
     }
 
-    // Image gallery functions
-    function changeMainImage(productId, imageUrl, index) {
-        const mainImage = document.getElementById('main-image-' + productId);
-        const thumbnails = document.querySelectorAll('.thumbnail-' + productId);
-        
-        // Update main image
-        mainImage.src = imageUrl;
-        
-        // Update thumbnail borders
-        thumbnails.forEach((thumb, i) => {
-            if (i === index) {
-                thumb.classList.remove('border-gray-200');
-                thumb.classList.add('border-blue-500');
-            } else {
-                thumb.classList.remove('border-blue-500');
-                thumb.classList.add('border-gray-200');
-            }
-        });
-    }
-    
     // Update cart count in navigation (if exists)
     async function updateCartCount() {
         if (window.updateCartCount) {
@@ -321,10 +264,10 @@
                                 Rp {{ number_format($product->price, 0, ',', '.') }}
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="openModal({{ $product->id ?? 'default' }})"
-                                   class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300">
+                                <a href="{{ route('products.show-detail', $product) }}"
+                                   class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300 text-center">
                                     Lihat Detail
-                                </button>
+                                </a>
                                 @auth
                                     <button onclick="addToCart({{ $product->id ?? 0 }})"
                                        class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors duration-300">
@@ -370,10 +313,10 @@
                                 Rp {{ number_format($product['price'], 0, ',', '.') }}
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="openModal('default-{{ $loop->index }}')"
-                                   class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300">
+                                <a href="{{ route('products.catalog') }}"
+                                   class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300 text-center">
                                     Lihat Detail
-                                </button>
+                                </a>
                                 @auth
                                     <button onclick="showLoginMessage()"
                                        class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors duration-300">
@@ -400,197 +343,6 @@
         </div>
     </div>
 </section>
-
-<!-- Product Modals for Real Products -->
-@if($products && $products->count() > 0)
-    @foreach($products as $product)
-        <div id="modal-{{ $product->id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center p-4">
-            <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <!-- Modal Header -->
-                <div class="flex items-center justify-between p-6 border-b">
-                    <h2 class="text-2xl font-bold text-gray-800">{{ $product->name }}</h2>
-                    <button onclick="closeModal({{ $product->id }})" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">
-                        &times;
-                    </button>
-                </div>
-                
-                <!-- Modal Body -->
-                <div class="p-6">
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <!-- Product Image Gallery -->
-                        <div class="space-y-4">
-                            <!-- Main Image -->
-                            <div class="h-80 bg-gray-100 flex items-center justify-center rounded-lg overflow-hidden">
-                                @if($product->images && $product->images->count() > 0)
-                                    <img id="main-image-{{ $product->id }}" src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
-                                @else
-                                    <div class="flex flex-col items-center justify-center text-gray-400 h-full">
-                                        <svg class="w-20 h-20 mb-4" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        <span class="text-lg">No Image Available</span>
-                                    </div>
-                                @endif
-                            </div>
-                            
-                            <!-- Thumbnail Images -->
-                            @if($product->images && $product->images->count() > 1)
-                                <div class="flex space-x-2 overflow-x-auto pb-2">
-                                    @foreach($product->images as $index => $image)
-                                        <div class="flex-shrink-0">
-                                            <img src="{{ $image->url }}" alt="{{ $product->name }}" 
-                                                 onclick="changeMainImage('{{ $product->id }}', '{{ $image->url }}', {{ $index }})"
-                                                 class="w-16 h-16 object-cover rounded-lg cursor-pointer border-2 {{ $index === 0 ? 'border-blue-500' : 'border-gray-200' }} hover:border-blue-400 transition-colors thumbnail-{{ $product->id }}">
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                        
-                        <!-- Product Details -->
-                        <div class="space-y-4">
-                            <div class="text-xs uppercase tracking-wide text-gray-500">
-                                {{ $product->category->name ?? 'Tanpa Kategori' }}
-                            </div>
-                            
-                            <div class="text-green-600 font-bold text-3xl">
-                                Rp {{ number_format($product->price, 0, ',', '.') }}
-                            </div>
-                            
-                            @if($product->stock > 0)
-                                <div class="text-sm text-gray-600">
-                                    Stok: <span class="font-semibold text-green-600">{{ $product->stock }} tersedia</span>
-                                </div>
-                            @else
-                                <div class="text-sm text-red-600 font-semibold">
-                                    Stok habis
-                                </div>
-                            @endif
-                            
-                            @if($product->weight)
-                                <div class="text-sm text-gray-600">
-                                    Berat: <span class="font-semibold">{{ $product->weight }} gram</span>
-                                </div>
-                            @endif
-                            
-                            <div class="border-t pt-4">
-                                <h4 class="font-semibold text-gray-800 mb-2">Deskripsi Produk</h4>
-                                <p class="text-gray-600 leading-relaxed">{{ $product->description }}</p>
-                            </div>
-                            
-                            @if($product->images && $product->images->count() > 1)
-                                <div class="text-sm text-gray-500">
-                                    <span class="font-medium">{{ $product->images->count() }}</span> foto tersedia
-                                </div>
-                            @endif
-                            
-                            @auth
-                                @if($product->stock > 0)
-                                    <div class="space-y-4">
-                                        <div class="flex items-center space-x-2">
-                                            <label for="quantity-{{ $product->id }}" class="text-sm font-medium text-gray-700">Jumlah:</label>
-                                            <input type="number" id="quantity-{{ $product->id }}" value="1" min="1" max="{{ $product->stock }}" 
-                                                   class="w-20 px-3 py-1 border border-gray-300 rounded-md text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-                                        
-                                        <button onclick="addToCartFromModal({{ $product->id }})"
-                                           class="w-full px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
-                                            Tambah ke Keranjang
-                                        </button>
-                                    </div>
-                                @else
-                                    <button disabled class="w-full px-6 py-3 bg-gray-400 text-white font-medium rounded-lg cursor-not-allowed">
-                                        Stok Habis
-                                    </button>
-                                @endif
-                            @else
-                                <a href="{{ route('login') }}" 
-                                   class="block w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition text-center">
-                                    Login untuk Membeli
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endforeach
-@endif
-
-<!-- Product Modals for Default Products -->
-@php
-    $defaultProducts = [
-        ['name' => 'Smartphone Flagship', 'description' => 'Smartphone terbaru dengan teknologi canggih, kamera berkualitas tinggi, dan performa yang luar biasa.', 'price' => 8999000],
-        ['name' => 'Laptop Gaming', 'description' => 'Laptop gaming dengan spesifikasi tinggi, cocok untuk gaming dan pekerjaan berat lainnya.', 'price' => 15499000],
-        ['name' => 'Headphone Wireless', 'description' => 'Headphone wireless dengan noise cancelling, kualitas suara premium dan baterai tahan lama.', 'price' => 2299000],
-        ['name' => 'Smart Watch', 'description' => 'Smart watch dengan fitur lengkap untuk monitoring kesehatan dan aktivitas harian Anda.', 'price' => 3599000],
-        ['name' => 'Kamera DSLR', 'description' => 'Kamera DSLR profesional dengan kualitas gambar superior untuk fotografi dan videografi.', 'price' => 12899000],
-        ['name' => 'Speaker Bluetooth', 'description' => 'Speaker bluetooth portabel dengan suara bass yang powerful dan desain yang elegan.', 'price' => 899000],
-    ];
-@endphp
-
-@if(!$products || $products->count() == 0)
-    @foreach($defaultProducts as $index => $product)
-        <div id="modal-default-{{ $index }}" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center p-4">
-            <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <!-- Modal Header -->
-                <div class="flex items-center justify-between p-6 border-b">
-                    <h2 class="text-2xl font-bold text-gray-800">{{ $product['name'] }}</h2>
-                    <button onclick="closeModal('default-{{ $index }}')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">
-                        &times;
-                    </button>
-                </div>
-                
-                <!-- Modal Body -->
-                <div class="p-6">
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <!-- Product Image -->
-                        <div class="h-80 bg-gray-100 flex items-center justify-center rounded-lg overflow-hidden">
-                            <div class="text-gray-400 text-center">
-                                <svg class="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z"></path>
-                                </svg>
-                                <span class="text-lg">Gambar Produk</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Product Details -->
-                        <div class="space-y-4">
-                            <div class="text-green-600 font-bold text-3xl">
-                                Rp {{ number_format($product['price'], 0, ',', '.') }}
-                            </div>
-                            
-                            <div class="border-t pt-4">
-                                <h4 class="font-semibold text-gray-800 mb-2">Deskripsi Produk</h4>
-                                <p class="text-gray-600 leading-relaxed">{{ $product['description'] }}</p>
-                            </div>
-                            
-                            @auth
-                                <div class="space-y-4">
-                                    <div class="flex items-center space-x-2">
-                                        <label class="text-sm font-medium text-gray-700">Jumlah:</label>
-                                        <input type="number" value="1" min="1" 
-                                               class="w-20 px-3 py-1 border border-gray-300 rounded-md text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    </div>
-                                    
-                                    <button onclick="showLoginMessage()"
-                                       class="w-full px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
-                                        Tambah ke Keranjang
-                                    </button>
-                                </div>
-                            @else
-                                <a href="{{ route('login') }}" 
-                                   class="block w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition text-center">
-                                    Login untuk Membeli
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endforeach
-@endif
 
 <!-- Toast Notification -->
 <div id="toast" class="hidden fixed top-4 right-4 z-50 max-w-sm w-full">
