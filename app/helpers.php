@@ -1,5 +1,7 @@
 <?php
 
+use App\Helpers\ShipmentHelper;
+
 if (!function_exists('formatRupiah')) {
     /**
      * Format number to Indonesian Rupiah currency
@@ -10,6 +12,18 @@ if (!function_exists('formatRupiah')) {
     function formatRupiah($amount)
     {
         return 'Rp ' . number_format($amount, 0, ',', '.');
+    }
+}
+
+if (!function_exists('shipmentEnabled')) {
+    /**
+     * Check if shipment functionality is enabled
+     *
+     * @return bool
+     */
+    function shipmentEnabled()
+    {
+        return ShipmentHelper::isEnabled();
     }
 }
 

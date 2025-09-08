@@ -22,14 +22,13 @@ class ProductRequest extends FormRequest
     {
         $productId = $this->route('product') ? $this->route('product')->id : null;
         
-        return [
+        $rules = [
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255|unique:products,name,' . $productId,
             'slug' => 'nullable|string|max:255|unique:products,slug,' . $productId,
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'weight' => 'nullable|numeric|min:0',
             'images' => 'nullable|array|max:10',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'image_urls' => 'nullable|string',
@@ -37,6 +36,15 @@ class ProductRequest extends FormRequest
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'image_url' => 'nullable|url'
         ];
+
+        // Add weight validation only if shipment is enabled
+        if (config('shipment.use_shipment', true)) {
+            $rules['weight'] = 'required|numeric|min:0';
+        } else {
+            $rules['weight'] = 'nullable|numeric|min:0';
+        }
+
+        return $rules;
     }
 
     /**

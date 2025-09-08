@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Helpers\ShipmentHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -31,10 +32,8 @@ class CheckoutController extends Controller
             return $item->product->price * $item->quantity;
         });
 
-        // Hitung total berat
-        $totalWeight = $cartItems->sum(function ($item) {
-            return $item->product->weight * $item->quantity;
-        });
+        // Hitung total berat (hanya jika shipment diaktifkan)
+        $totalWeight = ShipmentHelper::calculateTotalWeight($cartItems);
 
         // Ambil alamat user yang sudah terdaftar
         $addresses = Address::where('user_id', Auth::id())->get();
@@ -47,11 +46,23 @@ class CheckoutController extends Controller
         // Validasi input
         $rules = [
             'address_option' => 'required|in:existing,new',
-            'shipping_cost' => 'required|numeric|min:0',
-            'shipping_courier' => 'required|string',
-            'shipping_service' => 'required|string',
             'grand_total' => 'required|numeric|min:0',
         ];
+
+        // Add shipping-related validation only if shipment is enabled
+        if (ShipmentHelper::isEnabled()) {
+            $rules = array_merge($rules, [
+                'shipping_cost' => 'required|numeric|min:0',
+                'shipping_courier' => 'required|string',
+                'shipping_service' => 'required|string',
+            ]);
+        } else {
+            $rules = array_merge($rules, [
+                'shipping_cost' => 'nullable|numeric|min:0',
+                'shipping_courier' => 'nullable|string',
+                'shipping_service' => 'nullable|string',
+            ]);
+        }
 
         // Tambahkan validasi berdasarkan pilihan alamat
         if ($request->address_option === 'existing') {
@@ -129,12 +140,11 @@ class CheckoutController extends Controller
                 return $item->product->price * $item->quantity;
             });
 
-            $totalWeight = $cartItems->sum(function ($item) {
-                return $item->product->weight * $item->quantity;
-            });
+            // Hitung total berat (hanya jika shipment diaktifkan)
+            $totalWeight = ShipmentHelper::calculateTotalWeight($cartItems);
 
-            // Ambil data ongkir dari request
-            $shippingCost = (int) $request->shipping_cost;
+            // Ambil data ongkir dari request (akan 0 jika shipment dimatikan)
+            $shippingCost = ShipmentHelper::getShippingCost($request->shipping_cost);
             $shippingCourier = $request->shipping_courier;
             $shippingService = $request->shipping_service;
             $shippingDescription = $request->shipping_description ?? '';

@@ -1,4 +1,5 @@
 {{-- Shipment Calculator Component --}}
+@if(config('shipment.use_shipment', true))
 <div class="shipment-calculator" id="shipmentCalculator">
     <h3>Hitung Ongkos Kirim</h3>
     
@@ -423,3 +424,105 @@ window.getShipmentCalculator = function() {
     return window.shipmentCalc;
 };
 </script>
+@else
+{{-- Address Calculator Component (Raja Ongkir only for addresses) --}}
+<div class="address-calculator" id="addressCalculator">
+    <h3>Pilih Alamat Pengiriman</h3>
+    
+    <form id="addressForm" class="row g-3">
+        <div class="col-md-6">
+            <label for="destProvince" class="form-label">Provinsi Tujuan</label>
+            <select class="form-select" id="destProvince" name="dest_province" required>
+                <option value="">Pilih Provinsi</option>
+            </select>
+        </div>
+        
+        <div class="col-md-6">
+            <label for="destCity" class="form-label">Kota Tujuan</label>
+            <select class="form-select" id="destCity" name="dest_city" required>
+                <option value="">Pilih Kota</option>
+            </select>
+        </div>
+        
+        <div class="col-12">
+            <div class="alert alert-info">
+                <strong>Info:</strong> Ongkos kirim gratis untuk semua pesanan!
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize address calculator for provinces and cities only
+    window.addressCalc = {
+        init: function() {
+            this.loadProvinces();
+            this.bindEvents();
+        },
+        
+        loadProvinces: function() {
+            fetch('/api/shipment/provinces')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('destProvince');
+                    select.innerHTML = '<option value="">Pilih Provinsi</option>';
+                    
+                    if (data.success && data.data.results) {
+                        data.data.results.forEach(province => {
+                            const option = document.createElement('option');
+                            option.value = province.province_id;
+                            option.textContent = province.province;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading provinces:', error);
+                });
+        },
+        
+        loadCities: function(provinceId) {
+            const citySelect = document.getElementById('destCity');
+            citySelect.innerHTML = '<option value="">Loading...</option>';
+            
+            fetch(`/api/shipment/cities/${provinceId}`)
+                .then(response => response.json())
+                .then(data => {
+                    citySelect.innerHTML = '<option value="">Pilih Kota</option>';
+                    
+                    if (data.success && data.data.results) {
+                        data.data.results.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city.city_id;
+                            option.textContent = `${city.type} ${city.city_name}`;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading cities:', error);
+                    citySelect.innerHTML = '<option value="">Error loading cities</option>';
+                });
+        },
+        
+        bindEvents: function() {
+            document.getElementById('destProvince').addEventListener('change', (e) => {
+                if (e.target.value) {
+                    this.loadCities(e.target.value);
+                } else {
+                    document.getElementById('destCity').innerHTML = '<option value="">Pilih Kota</option>';
+                }
+            });
+        }
+    };
+    
+    window.addressCalc.init();
+});
+
+// For pages that need to access the address calculator instance
+window.getAddressCalculator = function() {
+    return window.addressCalc;
+};
+</script>
+@endif

@@ -74,8 +74,14 @@ class ProductController extends Controller
             'description' => $request->description,
             'price' => $request->price,
             'stock' => $request->stock,
-            'weight' => $request->weight,
         ];
+
+        // Only include weight if shipment is enabled
+        if (config('shipment.use_shipment', true)) {
+            $productData['weight'] = $request->weight;
+        } else {
+            $productData['weight'] = $request->weight; // Still store it if provided, but make it optional
+        }
 
         $product = Product::create($productData);
 
@@ -176,8 +182,14 @@ class ProductController extends Controller
                 'description' => $request->description,
                 'price' => $request->price,
                 'stock' => $request->stock,
-                'weight' => $request->weight,
             ];
+
+            // Only include weight if shipment is enabled
+            if (config('shipment.use_shipment', true)) {
+                $productData['weight'] = $request->weight;
+            } else {
+                $productData['weight'] = $request->weight; // Still store it if provided, but make it optional
+            }
 
             $product->update($productData);
 

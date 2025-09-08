@@ -16,7 +16,12 @@
                 <div class="flex justify-between items-center border-b pb-2">
                     <div>
                         <h3 class="font-medium">{{ $item->product->name }}</h3>
-                        <p class="text-sm text-gray-600">Qty: {{ $item->quantity }} | {{ number_format($item->product->weight * $item->quantity, 2) }} kg</p>
+                        <p class="text-sm text-gray-600">
+                            Qty: {{ $item->quantity }}
+                            @if(config('shipment.use_shipment', true) && $item->product->weight)
+                                | {{ number_format(($item->product->weight ?? 0) * $item->quantity, 2) }} kg
+                            @endif
+                        </p>
                     </div>
                     <div class="text-right">
                         <p class="font-medium">Rp {{ number_format($item->product->price * $item->quantity, 0, ',', '.') }}</p>
@@ -27,17 +32,25 @@
             </div>
 
             <div class="border-t pt-4 mt-4">
+                @if(config('shipment.use_shipment', true) && $totalWeight)
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Total Berat:</span>
                     <span class="font-medium">{{ number_format($totalWeight, 2) }} kg</span>
                 </div>
+                @endif
                 <div class="flex justify-between items-center mt-2">
                     <span class="text-gray-600">Subtotal:</span>
                     <span class="font-medium">Rp {{ number_format($totalPrice, 0, ',', '.') }}</span>
                 </div>
+                @if(config('shipment.use_shipment', true))
                 <div class="flex justify-between items-center mt-2" id="shippingCostRow" style="display: none;">
                     <span class="text-gray-600">Ongkos Kirim:</span>
                     <span class="font-medium" id="shippingCostDisplay">Rp 0</span>
+                @else
+                <div class="flex justify-between items-center mt-2">
+                    <span class="text-gray-600">Ongkos Kirim:</span>
+                    <span class="font-medium text-green-600">-</span>
+                @endif
                 </div>
                 <div class="flex justify-between items-center text-lg font-bold mt-3 pt-2 border-t">
                     <span>Total Bayar:</span>
@@ -147,16 +160,25 @@
                 </div>
 
                 <!-- Shipping Information (Hidden inputs) -->
+                @if(config('shipment.use_shipment', true))
                 <input type="hidden" name="shipping_cost" id="shippingCostHidden">
                 <input type="hidden" name="shipping_courier" id="shippingCourierHidden">
                 <input type="hidden" name="shipping_service" id="shippingServiceHidden">
                 <input type="hidden" name="shipping_description" id="shippingDescriptionHidden">
                 <input type="hidden" name="shipping_etd" id="shippingEtdHidden">
+                @else
+                <input type="hidden" name="shipping_cost" value="0">
+                <input type="hidden" name="shipping_courier" value="free">
+                <input type="hidden" name="shipping_service" value="Free Shipping">
+                <input type="hidden" name="shipping_description" value="Gratis Ongkos Kirim">
+                <input type="hidden" name="shipping_etd" value="2-3 hari">
+                @endif
                 <input type="hidden" name="grand_total" id="grandTotalHidden" value="{{ intval($totalPrice) }}">
 
                 <input type="hidden" name="address_id" id="selectedAddressId">
                 
                 <!-- Shipping Information Display (for existing address) -->
+                @if(config('shipment.use_shipment', true))
                 <div id="existingAddressShipping" class="mt-4 p-3 bg-blue-50 rounded-md" style="display: none;">
                     <h4 class="font-semibold text-blue-800">Pengiriman Otomatis:</h4>
                     <div id="existingShippingDetails" class="text-blue-700 text-sm"></div>
@@ -211,6 +233,8 @@
                         <div id="shippingDetails" class="text-blue-700"></div>
                     </div>
                 </div>
+               
+                @endif
 
                 <div class="mt-8">
                     <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition duration-200">
@@ -354,9 +378,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
             
-            // Calculate shipping button
+            // Calculate shipping button (only if shipment is enabled)
             const calculateShippingBtn = document.getElementById('calculateShippingBtn');
-            if (calculateShippingBtn) {
+            if (calculateShippingBtn && shipmentEnabled) {
                 calculateShippingBtn.addEventListener('click', calculateShipping);
             }
             
@@ -533,7 +557,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Shipment functions
     let selectedShipping = null;
     const storeLocation = {{ config('store.shipping_origin.city_id', 501) }}; // Store location from config
-    const totalWeight = {{ $totalWeight * 1000 ?? 1000 }}; // Convert to grams
+    const shipmentEnabled = {{ config('shipment.use_shipment', true) ? 'true' : 'false' }};
+    const totalWeight = {{ ($totalWeight * 1000) ?? 1000 }}; // Convert to grams
     const initialTotal = parseInt({{ $totalPrice ?? 0 }}); // Convert to exact integer tanpa pembulatan
     
     console.log('Checkout initialized:', {
@@ -616,7 +641,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const shippingSection = document.getElementById('shippingSection');
         const selectedAddressOption = document.querySelector('input[name="address_option"]:checked');
         
-        if (selectedAddressOption && selectedAddressOption.value === 'new' && kotaSelect && kotaSelect.value) {
+        // Only show shipping section if shipment is enabled
+        if (shipmentEnabled && selectedAddressOption && selectedAddressOption.value === 'new' && kotaSelect && kotaSelect.value) {
             shippingSection.style.display = 'block';
         } else {
             hideShippingSection();
@@ -626,29 +652,43 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideShippingSection() {
         const shippingSection = document.getElementById('shippingSection');
         hideShippingOptions();
-        shippingSection.style.display = 'none';
+        if (shippingSection) {
+            shippingSection.style.display = 'none';
+        }
     }
     
     function hideShippingOptions() {
         const shippingOptions = document.getElementById('shippingOptions');
         const selectedShippingInfo = document.getElementById('selectedShippingInfo');
         
-        shippingOptions.style.display = 'none';
-        selectedShippingInfo.style.display = 'none';
+        if (shippingOptions) shippingOptions.style.display = 'none';
+        if (selectedShippingInfo) selectedShippingInfo.style.display = 'none';
         selectedShipping = null;
         
-        // Reset hidden inputs
-        document.getElementById('shippingCostHidden').value = '';
-        document.getElementById('shippingCourierHidden').value = '';
-        document.getElementById('shippingServiceHidden').value = '';
-        document.getElementById('shippingDescriptionHidden').value = '';
-        document.getElementById('shippingEtdHidden').value = '';
+        // Reset hidden inputs (only if they exist)
+        const shippingCostHidden = document.getElementById('shippingCostHidden');
+        const shippingCourierHidden = document.getElementById('shippingCourierHidden');
+        const shippingServiceHidden = document.getElementById('shippingServiceHidden');
+        const shippingDescriptionHidden = document.getElementById('shippingDescriptionHidden');
+        const shippingEtdHidden = document.getElementById('shippingEtdHidden');
+        
+        if (shippingCostHidden) shippingCostHidden.value = '';
+        if (shippingCourierHidden) shippingCourierHidden.value = '';
+        if (shippingServiceHidden) shippingServiceHidden.value = '';
+        if (shippingDescriptionHidden) shippingDescriptionHidden.value = '';
+        if (shippingEtdHidden) shippingEtdHidden.value = '';
         
         // Update order summary
         updateOrderSummary();
     }
     
     async function calculateShipping() {
+        // Skip calculation if shipment is disabled
+        if (!shipmentEnabled) {
+            console.log('Shipment is disabled, skipping shipping calculation');
+            return;
+        }
+        
         const kotaSelect = document.getElementById('kotaSelect');
         const destination = kotaSelect.value;
         
@@ -876,6 +916,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     async function autoCalculateShippingForAddress(cityId, cityName) {
         console.log('Auto-calculating shipping for city:', cityId, cityName);
+        
+        // Skip auto-calculation if shipment is disabled
+        if (!shipmentEnabled) {
+            console.log('Shipment is disabled, skipping auto shipping calculation');
+            
+            // Show free shipping info for existing address
+            const existingAddressShipping = document.getElementById('existingAddressShipping');
+            if (existingAddressShipping) {
+                document.getElementById('existingShippingDetails').innerHTML = 
+                    `<strong>Gratis Ongkos Kirim!</strong><br>Pengiriman ke ${cityName} - GRATIS`;
+                existingAddressShipping.style.display = 'block';
+            }
+            
+            // Set shipping cost to 0
+            selectedShipping = {
+                cost: 0,
+                courier: 'free',
+                service: 'Free Shipping',
+                description: 'Gratis Ongkos Kirim',
+                etd: '2-3 hari'
+            };
+            
+            updateOrderSummary();
+            return;
+        }
         
         // Show loading indicator in total
         const grandTotalDisplay = document.getElementById('grandTotalDisplay');

@@ -133,18 +133,12 @@
                             <span class="text-gray-600">Subtotal</span>
                             <span class="font-medium" id="subtotal">Rp {{ number_format($total, 0, ',', '.') }}</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Pajak (11%)</span>
-                            <span class="font-medium" id="tax">Rp {{ number_format($total * 0.11, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Ongkos Kirim</span>
-                            <span class="font-medium">Rp 15.000</span>
-                        </div>
+ 
+ 
                         <hr class="border-gray-200">
                         <div class="flex justify-between text-lg font-semibold">
                             <span class="text-gray-800">Total</span>
-                            <span class="text-green-600" id="final-total">Rp {{ number_format($total + ($total * 0.11) + 15000, 0, ',', '.') }}</span>
+                            <span class="text-green-600" id="final-total">Rp {{ number_format($total , 0, ',', '.') }}</span>
                         </div>
                     </div>
                     
