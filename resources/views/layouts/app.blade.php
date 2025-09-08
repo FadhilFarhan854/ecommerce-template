@@ -74,6 +74,7 @@
                     <!-- Authentication Navigation -->
                     <div class="flex items-center space-x-4">
                         @auth
+                            @if(auth()->check() && auth()->user()->role === 'customer')
                             <!-- Cart Icon -->
                             <div class="relative">
                                 <a href="{{ route('cart.index') }}" class="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 relative">
@@ -83,7 +84,7 @@
                                     
                                 </a>
                             </div>
-                            
+                            @endif
                             <!-- User Menu -->
                             <div class="relative">
                                 <button onclick="toggleDropdown(event)" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
@@ -111,7 +112,8 @@
                                         </svg>
                                         Edit Profile
                                     </a>
-                                    
+
+                                    @if(auth()->check() && auth()->user()->role === 'customer')
                                     <a href="{{ route('cart.index') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
                                         <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0H17M9 13h8"></path>
@@ -126,7 +128,7 @@
 
                                         History Pembelian
                                     </a>
-                                    
+                                    @endif
                                     @if(auth()->check() && auth()->user()->role === 'admin')
                                     <a href="{{ route('finance.index') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
                                         <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
