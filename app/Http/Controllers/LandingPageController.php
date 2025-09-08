@@ -20,42 +20,9 @@ class LandingPageController extends Controller
         // Get active banners
         $banners = Banner::where('status', true)->latest()->get();
 
-        $pageData = [
-            'hero' => [
-                'slides' => [
-                    [
-                        'title' => 'Selamat Datang di TokoKu',
-                        'subtitle' => 'Temukan produk berkualitas dengan harga terbaik',
-                        'button_text' => 'Lihat Produk',
-                        'button_link' => '#products',
-                        'background' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                    ],
-                    [
-                        'title' => 'Kualitas Terjamin',
-                        'subtitle' => 'Produk pilihan dengan standar kualitas internasional',
-                        'button_text' => 'Pelajari Lebih Lanjut',
-                        'button_link' => '#about',
-                        'background' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-                    ],
-                    [
-                        'title' => 'Pengiriman Cepat',
-                        'subtitle' => 'Gratis ongkir ke seluruh Indonesia untuk pembelian minimal',
-                        'button_text' => 'Belanja Sekarang',
-                        'button_link' => route('products.catalog'),
-                        'background' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
-                    ]
-                ]
-            ],
-            'about' => [
-                'title' => config('landing.about.title', 'Tentang TokoKu Store'),
-                'description' => config('landing.about.description', 'TokoKu Store adalah platform e-commerce terpercaya yang menyediakan berbagai produk berkualitas tinggi dengan harga kompetitif. Kami berkomitmen untuk memberikan pengalaman belanja terbaik untuk setiap pelanggan.'),
-                'additional_info' => config('landing.about.additional_info'),
-                'vision' => config('landing.about.vision'),
-                'mission' => config('landing.about.mission')
-            ]
-        ];
-
+        // Tidak perlu mengirim pageData lagi karena sudah dihandle oleh PageDataComposer
+        // Data akan otomatis tersedia di semua view melalui View Composer
         
-        return view('welcome', compact('products', 'pageData', 'banners'));
+        return view('welcome', compact('products', 'banners'));
     }
 }

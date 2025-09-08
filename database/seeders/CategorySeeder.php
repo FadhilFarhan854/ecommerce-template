@@ -14,24 +14,24 @@ class CategorySeeder extends Seeder
     {
         $categories = [
             [
-                'name' => 'Electronics',
-                'slug' => 'electronics'
+                'name' => 'Parfum Pria',
+                'slug' => 'parfum-pria'
             ],
             [
-                'name' => 'Clothing & Fashion',
-                'slug' => 'clothing-fashion'
+                'name' => 'Parfum Wanita',
+                'slug' => 'parfum-wanita'
             ],
             [
-                'name' => 'Home & Garden',
-                'slug' => 'home-garden'
+                'name' => 'Parfum Unisex',
+                'slug' => 'parfum-unisex'
             ],
             [
-                'name' => 'Sports & Outdoors',
-                'slug' => 'sports-outdoors'
+                'name' => 'Minyak Wangi',
+                'slug' => 'minyak-wangi'
             ],
             [
-                'name' => 'Books & Media',
-                'slug' => 'books-media'
+                'name' => 'Body Care',
+                'slug' => 'body-care'
             ]
         ];
 

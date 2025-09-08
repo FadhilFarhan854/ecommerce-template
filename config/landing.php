@@ -10,7 +10,7 @@ return [
     |
     */
     'site' => [
-        'name' => env('SITE_NAME', 'TokoKu Store'),
+        'name' => env('SITE_NAME', 'quickstart e-commerce'),
         'description' => env('SITE_DESCRIPTION', 'Platform e-commerce terpercaya dengan produk berkualitas dan pelayanan terbaik di Indonesia.'),
         'tagline' => env('SITE_TAGLINE', 'Belanja Smart, Hidup Berkualitas'),
         'logo' => env('SITE_LOGO', '/images/logo.png'),
@@ -28,19 +28,13 @@ return [
     'hero' => [
         'slides' => [
             [
-                'title' => 'Selamat Datang di TokoKu',
-                'subtitle' => 'Temukan produk berkualitas dengan harga terbaik',
+                'title' => 'Selamat Datang di Rama Perfume',
+                'subtitle' => 'Temukan parfum berkualitas dengan harga terbaik',
                 'button_text' => 'Lihat Produk',
                 'button_link' => "{{ route('products.catalog') }}",
                 'background' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             ],
-            [
-                'title' => 'Koleksi Terbaru',
-                'subtitle' => 'Dapatkan produk terbaru dengan teknologi terdepan',
-                'button_text' => 'Jelajahi Sekarang',
-                'button_link' => '#products',
-                'background' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            ],
+           
             [
                 'title' => 'Promo Spesial',
                 'subtitle' => 'Hemat hingga 50% untuk semua kategori produk',
@@ -60,8 +54,8 @@ return [
     |
     */
     'about' => [
-        'title' => 'Tentang TokoKu Store',
-        'description' => 'TokoKu Store adalah platform e-commerce terpercaya yang menyediakan berbagai produk berkualitas tinggi dengan harga kompetitif. Kami berkomitmen untuk memberikan pengalaman belanja terbaik untuk setiap pelanggan.',
+        'title' => 'Tentang Rama Perfume',
+        'description' => 'Rama Perfume adalah platform e-commerce terpercaya yang menyediakan berbagai produk berkualitas tinggi dengan harga kompetitif. Kami berkomitmen untuk memberikan pengalaman belanja terbaik untuk setiap pelanggan.',
         'additional_info' => 'Dengan layanan customer service 24/7, pengiriman cepat, dan jaminan kualitas produk, kami telah melayani ribuan pelanggan di seluruh Indonesia sejak tahun 2020.',
         'vision' => 'Menjadi platform e-commerce pilihan utama di Indonesia',
         'mission' => 'Memberikan akses mudah ke produk berkualitas dengan pelayanan terbaik',

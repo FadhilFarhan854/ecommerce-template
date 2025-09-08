@@ -27,6 +27,7 @@ class PageDataComposer
             'navigation' => config('landing.navigation'),
         ];
         
+        // Pastikan data tidak di-override jika sudah ada dari controller
         $view->with('pageData', $pageData);
     }
 }

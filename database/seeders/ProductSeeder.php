@@ -22,122 +22,167 @@ class ProductSeeder extends Seeder
         }
 
         $products = [
-            // Electronics
+            // Parfum Pria
             [
-                'name' => 'iPhone 14 Pro',
-                'slug' => 'iphone-14-pro',
-                'description' => 'The latest iPhone with advanced camera system and A16 Bionic chip.',
-                'price' => 999.99,
-                'stock' => 50,
-                'weight' => 0.206,
-                'category_name' => 'Electronics'
-            ],
-            [
-                'name' => 'MacBook Air M2',
-                'slug' => 'macbook-air-m2',
-                'description' => 'Lightweight laptop with M2 chip and all-day battery life.',
-                'price' => 1199.99,
-                'stock' => 30,
-                'weight' => 1.24,
-                'category_name' => 'Electronics'
-            ],
-            [
-                'name' => 'Samsung 65" 4K TV',
-                'slug' => 'samsung-65-4k-tv',
-                'description' => 'Smart TV with crystal clear 4K display and HDR support.',
-                'price' => 799.99,
-                'stock' => 15,
-                'weight' => 18.5,
-                'category_name' => 'Electronics'
-            ],
-
-            // Clothing & Fashion
-            [
-                'name' => 'Classic White T-Shirt',
-                'slug' => 'classic-white-t-shirt',
-                'description' => 'Premium cotton t-shirt with comfortable fit.',
-                'price' => 24.99,
-                'stock' => 100,
-                'weight' => 0.2,
-                'category_name' => 'Clothing & Fashion'
-            ],
-            [
-                'name' => 'Blue Denim Jeans',
-                'slug' => 'blue-denim-jeans',
-                'description' => 'Classic blue jeans with modern fit and stretch fabric.',
-                'price' => 79.99,
-                'stock' => 75,
-                'weight' => 0.8,
-                'category_name' => 'Clothing & Fashion'
-            ],
-            [
-                'name' => 'Leather Jacket',
-                'slug' => 'leather-jacket',
-                'description' => 'Genuine leather jacket with classic design.',
-                'price' => 199.99,
+                'name' => 'Dior Sauvage EDT 100ml',
+                'slug' => 'dior-sauvage-edt-100ml',
+                'description' => 'Parfum pria dengan aroma segar dan maskulin. Notes bergamot, lada, dan ambroxan yang tahan lama.',
+                'price' => 1599000,
                 'stock' => 25,
-                'weight' => 1.5,
-                'category_name' => 'Clothing & Fashion'
+                'weight' => 0.35,
+                'category_name' => 'Parfum Pria'
+            ],
+            [
+                'name' => 'Chanel Bleu de Chanel EDP 100ml',
+                'slug' => 'chanel-bleu-de-chanel-edp-100ml',
+                'description' => 'Parfum mewah dengan karakter woody aromatic yang elegan dan sophisticated.',
+                'price' => 2200000,
+                'stock' => 15,
+                'weight' => 0.35,
+                'category_name' => 'Parfum Pria'
+            ],
+            [
+                'name' => 'Tom Ford Oud Wood EDP 50ml',
+                'slug' => 'tom-ford-oud-wood-edp-50ml',
+                'description' => 'Parfum premium dengan aroma oud yang misterius dan sensual.',
+                'price' => 3500000,
+                'stock' => 10,
+                'weight' => 0.25,
+                'category_name' => 'Parfum Pria'
+            ],
+            [
+                'name' => 'Versace Eros EDT 100ml',
+                'slug' => 'versace-eros-edt-100ml',
+                'description' => 'Parfum dengan aroma mint, green apple, dan vanilla yang penuh gairah.',
+                'price' => 899000,
+                'stock' => 30,
+                'weight' => 0.35,
+                'category_name' => 'Parfum Pria'
             ],
 
-            // Home & Garden
+            // Parfum Wanita
             [
-                'name' => 'Coffee Maker Deluxe',
-                'slug' => 'coffee-maker-deluxe',
-                'description' => 'Programmable coffee maker with built-in grinder.',
-                'price' => 149.99,
-                'stock' => 40,
-                'weight' => 4.5,
-                'category_name' => 'Home & Garden'
+                'name' => 'Chanel No.5 EDP 100ml',
+                'slug' => 'chanel-no5-edp-100ml',
+                'description' => 'Parfum ikonik dengan bunga aldehyde yang timeless dan elegan.',
+                'price' => 2800000,
+                'stock' => 20,
+                'weight' => 0.35,
+                'category_name' => 'Parfum Wanita'
             ],
             [
-                'name' => 'Garden Tool Set',
-                'slug' => 'garden-tool-set',
-                'description' => 'Complete set of essential gardening tools.',
-                'price' => 89.99,
-                'stock' => 60,
-                'weight' => 3.2,
-                'category_name' => 'Home & Garden'
+                'name' => 'Dior Miss Dior EDP 100ml',
+                'slug' => 'dior-miss-dior-edp-100ml',
+                'description' => 'Parfum feminin dengan aroma rose dan patchouli yang romantis.',
+                'price' => 1899000,
+                'stock' => 25,
+                'weight' => 0.35,
+                'category_name' => 'Parfum Wanita'
+            ],
+            [
+                'name' => 'Yves Saint Laurent Black Opium EDP 90ml',
+                'slug' => 'ysl-black-opium-edp-90ml',
+                'description' => 'Parfum sensual dengan aroma coffee, vanilla, dan white flowers.',
+                'price' => 1650000,
+                'stock' => 18,
+                'weight' => 0.32,
+                'category_name' => 'Parfum Wanita'
+            ],
+            [
+                'name' => 'Lancôme La Vie Est Belle EDP 100ml',
+                'slug' => 'lancome-la-vie-est-belle-edp-100ml',
+                'description' => 'Parfum manis dengan iris, patchouli, dan gourmand accord.',
+                'price' => 1450000,
+                'stock' => 22,
+                'weight' => 0.35,
+                'category_name' => 'Parfum Wanita'
             ],
 
-            // Sports & Outdoors
+            // Parfum Unisex
             [
-                'name' => 'Yoga Mat Premium',
-                'slug' => 'yoga-mat-premium',
-                'description' => 'Non-slip yoga mat with extra cushioning.',
-                'price' => 39.99,
-                'stock' => 80,
-                'weight' => 1.8,
-                'category_name' => 'Sports & Outdoors'
+                'name' => 'Creed Aventus EDP 100ml',
+                'slug' => 'creed-aventus-edp-100ml',
+                'description' => 'Parfum mewah unisex dengan aroma fruity dan smoky yang legendary.',
+                'price' => 4200000,
+                'stock' => 8,
+                'weight' => 0.35,
+                'category_name' => 'Parfum Unisex'
             ],
             [
-                'name' => 'Mountain Bike',
-                'slug' => 'mountain-bike',
-                'description' => '21-speed mountain bike with aluminum frame.',
-                'price' => 599.99,
+                'name' => 'Maison Margiela REPLICA Beach Walk EDT 100ml',
+                'slug' => 'maison-margiela-replica-beach-walk-edt-100ml',
+                'description' => 'Parfum yang mengingatkan suasana pantai dengan aroma coconut dan solar.',
+                'price' => 1750000,
+                'stock' => 15,
+                'weight' => 0.35,
+                'category_name' => 'Parfum Unisex'
+            ],
+            [
+                'name' => 'Le Labo Santal 33 EDP 100ml',
+                'slug' => 'le-labo-santal-33-edp-100ml',
+                'description' => 'Parfum niche dengan aroma sandalwood yang unique dan addictive.',
+                'price' => 3200000,
                 'stock' => 12,
-                'weight' => 15.5,
-                'category_name' => 'Sports & Outdoors'
+                'weight' => 0.35,
+                'category_name' => 'Parfum Unisex'
             ],
 
-            // Books & Media
+            // Minyak Wangi
             [
-                'name' => 'Programming Book Collection',
-                'slug' => 'programming-book-collection',
-                'description' => 'Essential programming books for developers.',
-                'price' => 129.99,
-                'stock' => 35,
-                'weight' => 2.5,
-                'category_name' => 'Books & Media'
+                'name' => 'Attar Oud Premium 12ml',
+                'slug' => 'attar-oud-premium-12ml',
+                'description' => 'Minyak wangi oud murni dengan aroma yang kuat dan tahan lama.',
+                'price' => 350000,
+                'stock' => 40,
+                'weight' => 0.05,
+                'category_name' => 'Minyak Wangi'
             ],
             [
-                'name' => 'Wireless Headphones',
-                'slug' => 'wireless-headphones',
-                'description' => 'Noise-cancelling wireless headphones with premium sound.',
-                'price' => 249.99,
+                'name' => 'Minyak Wangi Mawar 10ml',
+                'slug' => 'minyak-wangi-mawar-10ml',
+                'description' => 'Minyak wangi mawar alami dengan aroma bunga yang segar.',
+                'price' => 75000,
+                'stock' => 60,
+                'weight' => 0.04,
+                'category_name' => 'Minyak Wangi'
+            ],
+            [
+                'name' => 'Attar Musk White 12ml',
+                'slug' => 'attar-musk-white-12ml',
+                'description' => 'Minyak wangi musk putih yang lembut dan menenangkan.',
+                'price' => 125000,
+                'stock' => 35,
+                'weight' => 0.05,
+                'category_name' => 'Minyak Wangi'
+            ],
+
+            // Body Care
+            [
+                'name' => 'Bath & Body Works Body Mist 236ml',
+                'slug' => 'bath-body-works-body-mist-236ml',
+                'description' => 'Body mist dengan berbagai pilihan aroma segar untuk daily use.',
+                'price' => 299000,
+                'stock' => 50,
+                'weight' => 0.28,
+                'category_name' => 'Body Care'
+            ],
+            [
+                'name' => 'Victoria Secret Body Spray 250ml',
+                'slug' => 'victoria-secret-body-spray-250ml',
+                'description' => 'Body spray dengan aroma sensual dan feminine yang menawan.',
+                'price' => 385000,
                 'stock' => 45,
                 'weight' => 0.3,
-                'category_name' => 'Books & Media'
+                'category_name' => 'Body Care'
+            ],
+            [
+                'name' => 'The Body Shop Body Butter 200ml',
+                'slug' => 'the-body-shop-body-butter-200ml',
+                'description' => 'Body butter dengan moisturizer dan aroma natural yang menyegarkan.',
+                'price' => 275000,
+                'stock' => 55,
+                'weight' => 0.25,
+                'category_name' => 'Body Care'
             ]
         ];
 

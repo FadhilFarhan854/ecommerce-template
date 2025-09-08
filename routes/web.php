@@ -19,6 +19,27 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingPageController::class, 'index'])->name('home');
 
+// Debug route for checking pageData
+Route::get('/debug-pagedata', function () {
+    $pageData = [
+        'site' => config('landing.site'),
+        'hero' => config('landing.hero'),
+        'about' => config('landing.about'),
+        'contact' => config('landing.contact'),
+        'footer' => [
+            'company_info' => [
+                'name' => config('landing.site.name'),
+                'description' => config('landing.site.description'),
+            ],
+            'links' => config('landing.footer.links'),
+            'copyright' => config('landing.footer.copyright'),
+        ],
+        'navigation' => config('landing.navigation'),
+    ];
+    
+    return response()->json($pageData);
+});
+
 // Authentication Routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', function () {

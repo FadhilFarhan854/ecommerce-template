@@ -21,8 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Daftarkan View Composer untuk layout app
-        View::composer('layouts.app', PageDataComposer::class);
+        // Daftarkan View Composer untuk layout app dan welcome
+        View::composer(['layouts.app', 'welcome'], PageDataComposer::class);
 
         // Register global helper for Rupiah formatting
         if (!function_exists('formatRupiah')) {
