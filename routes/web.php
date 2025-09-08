@@ -14,6 +14,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\FAQController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\DiscountController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingPageController::class, 'index'])->name('home');
@@ -149,4 +150,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
 // Finance view for admin (read-only access)
 Route::middleware(['auth'])->group(function () {
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index')->middleware('admin');
+});
+
+// Discount routes - Admin only
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('discounts', DiscountController::class);
 });

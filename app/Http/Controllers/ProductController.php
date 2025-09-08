@@ -16,7 +16,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with(['category', 'discount', 'images']);
         
         // Filter by category if provided
         if ($request->filled('category_id')) {
@@ -134,7 +134,7 @@ class ProductController extends Controller
      */
     public function show(Product $product, Request $request)
     {
-        $product->load(['category', 'images', 'reviews.user']);
+        $product->load(['category', 'images', 'reviews.user', 'discount']);
         
         // If API request
         if ($request->wantsJson() || $request->is('api/*')) {
@@ -145,7 +145,7 @@ class ProductController extends Controller
         }
 
         // Get related products
-        $relatedProducts = Product::with(['category', 'images'])
+        $relatedProducts = Product::with(['category', 'images', 'discount'])
                     ->where('category_id', $product->category_id)
                     ->where('id', '!=', $product->id)
                     ->limit(4)
@@ -360,7 +360,7 @@ class ProductController extends Controller
             }
         }
 
-        $products = $query->with(['category', 'images'])->paginate($perPage);
+        $products = $query->with(['category', 'images', 'discount'])->paginate($perPage);
         
         // Ambil semua kategori untuk filter
         $categories = Category::all();
@@ -373,8 +373,8 @@ class ProductController extends Controller
      */
     public function showProduct(Product $product)
     {
-        $product->load(['category', 'images', 'reviews.user']);
-        $relatedProducts = Product::with(['category', 'images'])
+        $product->load(['category', 'images', 'reviews.user', 'discount']);
+        $relatedProducts = Product::with(['category', 'images', 'discount'])
                     ->where('category_id', $product->category_id)
                     ->where('id', '!=', $product->id)
                     ->limit(4)

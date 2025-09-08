@@ -82,7 +82,19 @@
                                     <p class="text-gray-600 flex-grow mb-4">{{ Str::limit($product->description, 100) }}</p>
                                     <div class="mt-auto">
                                         <div class="flex justify-between items-center mb-3">
-                                            <strong class="text-xl text-green-600">Rp {{ number_format($product->price, 0, ',', '.') }}</strong>
+                                            <div class="flex flex-col">
+                                                @if($product->discount && $product->discount->is_active)
+                                                    <div class="flex items-center space-x-2">
+                                                        <span class="text-sm text-gray-500 line-through">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                            -{{ $product->discount->percentage }}%
+                                                        </span>
+                                                    </div>
+                                                    <strong class="text-xl text-green-600">Rp {{ number_format($product->discounted_price, 0, ',', '.') }}</strong>
+                                                @else
+                                                    <strong class="text-xl text-green-600">Rp {{ number_format($product->price, 0, ',', '.') }}</strong>
+                                                @endif
+                                            </div>
                                             <span class="px-2 py-1 text-xs rounded-full {{ $product->stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                                 Stock: {{ $product->stock }}
                                             </span>

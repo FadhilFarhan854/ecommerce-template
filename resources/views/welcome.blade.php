@@ -267,7 +267,14 @@
             @if($products && $products->count() > 0)
                 @foreach($products as $product)
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                        <div class="h-48 bg-gray-200 flex items-center justify-center overflow-hidden">
+                        <div class="h-48 bg-gray-200 flex items-center justify-center overflow-hidden relative">
+                            <!-- Badge Diskon -->
+                            @if($product->discount && $product->discount->isActive())
+                                <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
+                                    -{{ $product->discount->percentage }}%
+                                </div>
+                            @endif
+                            
                             @if($product->images && $product->images->count() > 0)
                                 <img src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                             @else
@@ -282,8 +289,31 @@
                         <div class="p-6">
                             <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ $product->name }}</h3>
                             <p class="text-gray-600 mb-4 line-clamp-3">{{ Str::limit($product->description, 100) }}</p>
-                            <div class="text-2xl font-bold text-blue-600 mb-4">
-                                Rp {{ number_format($product->price, 0, ',', '.') }}
+                            
+                            <!-- Harga dengan diskon -->
+                            <div class="mb-4">
+                                @if($product->discount && $product->discount->isActive())
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">
+                                            {{ $product->discount->percentage }}% OFF
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-2xl font-bold text-blue-600">
+                                            Rp {{ number_format($product->discount->getDiscountedPrice($product->price), 0, ',', '.') }}
+                                        </span>
+                                        <span class="text-gray-400 line-through text-sm">
+                                            Rp {{ number_format($product->price, 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                    <div class="text-xs text-red-600">
+                                        Hemat Rp {{ number_format($product->discount->getDiscountAmount($product->price), 0, ',', '.') }}
+                                    </div>
+                                @else
+                                    <div class="text-2xl font-bold text-blue-600">
+                                        Rp {{ number_format($product->price, 0, ',', '.') }}
+                                    </div>
+                                @endif
                             </div>
                             <div class="flex gap-2">
                                 <a href="{{ route('products.show-detail', $product) }}"

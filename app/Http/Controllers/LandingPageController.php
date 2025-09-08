@@ -10,7 +10,7 @@ class LandingPageController extends Controller
     public function index()
     {
         // Jika ada produk di database, gunakan itu. Jika tidak, gunakan sample products
-        $products = \App\Models\Product::with('images')->take(6)->get();
+        $products = \App\Models\Product::with(['images', 'discount'])->take(6)->get();
         if ($products->isEmpty()) {
             $products = collect(config('landing.sample_products'))->map(function ($product) {
                 return (object) $product;

@@ -95,6 +95,13 @@
                             </div>
                         @endif
                         
+                        <!-- Badge Diskon -->
+                        @if($product->discount && $product->discount->isActive())
+                            <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
+                                -{{ $product->discount->percentage }}%
+                            </div>
+                        @endif
+                        
                         @if($product->images && $product->images->count() > 0)
                             <img src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                         @elseif($product->image)
@@ -122,8 +129,28 @@
                             </div>
                         @endif
                         
-                        <div class="text-green-600 font-bold text-lg mb-3">
-                            Rp {{ number_format($product->price, 0, ',', '.') }}
+                        <!-- Harga dengan diskon -->
+                        <div class="mb-3">
+                            @if($product->discount && $product->discount->isActive())
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">
+                                        {{ $product->discount->percentage }}% OFF
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-green-600 font-bold text-lg">
+                                        Rp {{ number_format($product->discount->getDiscountedPrice($product->price), 0, ',', '.') }}
+                                    </span>
+                                    <span class="text-gray-400 line-through text-sm">
+                                        Rp {{ number_format($product->price, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                                
+                            @else
+                                <div class="text-green-600 font-bold text-lg">
+                                    Rp {{ number_format($product->price, 0, ',', '.') }}
+                                </div>
+                            @endif
                         </div>
                         <div class="flex gap-2">
                             <a href="{{ route('products.show-detail', $product) }}"

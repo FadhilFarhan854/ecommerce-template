@@ -23,6 +23,7 @@
                     @if(Auth::user()->role === 'admin')
                         <a href="{{ route('products.index') }}" class="btn btn-primary" style="text-align: center;">Kelola Produk</a>
                         <a href="{{ route('categories.index') }}" class="btn btn-primary" style="text-align: center;">Kelola Kategori</a>
+                        <a href="{{ route('admin.discounts.index') }}" class="btn btn-primary" style="text-align: center;">Kelola Diskon</a>
                     @endif
                 </div>
             </div>

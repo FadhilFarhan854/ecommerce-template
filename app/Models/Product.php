@@ -47,6 +47,11 @@ class Product extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function discount()
+    {
+        return $this->hasOne(Discount::class);
+    }
+
     // Helper method untuk menghitung rata-rata rating
     public function getAverageRatingAttribute()
     {
@@ -57,5 +62,38 @@ class Product extends Model
     public function getReviewCountAttribute()
     {
         return $this->reviews()->count();
+    }
+
+    // Helper method untuk mendapatkan harga setelah diskon
+    public function getDiscountedPriceAttribute()
+    {
+        if ($this->discount && $this->discount->isActive()) {
+            return $this->discount->getDiscountedPrice($this->price);
+        }
+        return $this->price;
+    }
+
+    // Helper method untuk mendapatkan persentase diskon
+    public function getDiscountPercentageAttribute()
+    {
+        if ($this->discount && $this->discount->isActive()) {
+            return $this->discount->percentage;
+        }
+        return 0;
+    }
+
+    // Helper method untuk cek apakah ada diskon aktif
+    public function hasActiveDiscountAttribute()
+    {
+        return $this->discount && $this->discount->isActive() && $this->discount->percentage > 0;
+    }
+
+    // Helper method untuk mendapatkan jumlah penghematan
+    public function getSavingsAmountAttribute()
+    {
+        if ($this->hasActiveDiscount) {
+            return $this->discount->getDiscountAmount($this->price);
+        }
+        return 0;
     }
 }
