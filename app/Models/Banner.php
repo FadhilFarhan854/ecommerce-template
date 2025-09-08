@@ -7,8 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Banner extends Model
 {
     protected $fillable = [
-        'title',
         'image',
-        'active',
+        'status',
     ];
+
+    // Hapus casting boolean yang mungkin bermasalah
+    // protected $casts = [
+    //     'status' => 'boolean',
+    // ];
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
 }
