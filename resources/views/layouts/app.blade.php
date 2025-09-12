@@ -93,7 +93,7 @@
                             @if(auth()->check() && auth()->user()->role === 'customer')
                             <!-- Cart Icon -->
                             <div class="relative">
-                                <a href="{{ route('cart.index') }}" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 relative">
+                                <a href="{{ route('cart.index') }}" class="w-9 h-9 lg:w-10 lg:h-10 rounded-full hover:bg-gray-100 transition-colors duration-200 relative flex items-center justify-center">
                                     <svg class="w-5 h-5 lg:w-6 lg:h-6 text-gray-600 hover:text-blue-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0H17M9 13h8"></path>
                                     </svg>
