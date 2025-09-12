@@ -70,9 +70,7 @@
                     </div>
                 </div>
             </div>
-            
         </div>
-
         <!-- Alert for Low Stock -->
         @if($lowStockProducts > 0)
         <div class="mb-8">

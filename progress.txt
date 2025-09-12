@@ -1,0 +1,36 @@
+Laporan progres 9 September 2025 (25%)
+
+Link Website Sementara : https://ecommerce-parfum.exaapk.com/
+
+- [x]  Tampilan Halaman Utama
+- [x]  Navigation Bar untuk customer
+- [x]  Navigation Bar untuk admin
+- [x]  Login dan register -> register masih belum menggunakan verifikasi email
+- [x]  Content untuk beranda customer: banner dinamis yang bisa di kontrol admin, about, contoh produk, alamat dan nomer yang bisa dihubungi -> karena cabangnya banyak akan dibuatkan halaman terpisah
+- [x]  Content untuk beranda admin: informasi trend penjualan prdouk harian - tahunan, navigasi ke berbagai manajemen, profit harian dan lain"
+- [x]  halaman FAQ customer untuk menampilkan FAQ yang sudah disediakan admin
+- [x]  halaman catalog yang menampilkan keseluruhan produk dengan fitur filter:
+        - Nama
+        - harga
+        - terbaru
+        - terpopuler
+        - kategori
+- [x]  Fitur tambah keranjang untuk memasukan produk kedalam cart sebelum checkout
+- [x]  Fitur Rating dan review produkbagi pengguna yang sudah membeli barang tersebut
+- [x]  Fitur Checkout dan pembayaran yang terintegrasi dengan midtrans
+- [x]  Manajemen banner Admin
+- [x]  Manajemen finance admin -> bisa mencatat pengeluaran
+- [x]  Manajemen pengguna
+- [x]  Manajemen pesanan
+- [x]  Manajemen produk
+- [x]  Manajemen FAQ
+- [x]  Manajemen kategori
+
+Note:
+1. fungsionalitas beberapa belum ditambahkan
+2. UI dan theme warna masih bersifat sementara karena di 25% ini berfokus ke fungsionalitas aplikasi
+3. data sudah di integrasikan dengan database
+
+
+Untuk semua data masih bersifat dummy karena baru 25% yang berfokus pada tampilan dasar dari website
+

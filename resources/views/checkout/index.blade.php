@@ -136,14 +136,14 @@
                             <select name="provinsi" id="provinsiSelect" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
                                 <option value="">Pilih Provinsi</option>
                             </select>
-                            <input type="hidden" name="provinsi_id" id="provinsiIdHidden">
+                            <input type="hidden" name="provinsi_name" id="provinsiNameHidden">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kota *</label>
                             <select name="kota" id="kotaSelect" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
                                 <option value="">Pilih Kota</option>
                             </select>
-                            <input type="hidden" name="kota_id" id="kotaIdHidden">
+                            <input type="hidden" name="kota_name" id="kotaNameHidden">
                         </div>
                     </div>
 
@@ -357,23 +357,31 @@ document.addEventListener('DOMContentLoaded', function() {
             // Handle province and city changes
             const provinsiSelect = document.getElementById('provinsiSelect');
             const kotaSelect = document.getElementById('kotaSelect');
-            const provinsiIdHidden = document.getElementById('provinsiIdHidden');
-            const kotaIdHidden = document.getElementById('kotaIdHidden');
+            const provinsiNameHidden = document.getElementById('provinsiNameHidden');
+            const kotaNameHidden = document.getElementById('kotaNameHidden');
             
             if (provinsiSelect) {
                 loadProvinces();
                 provinsiSelect.addEventListener('change', function() {
                     const selectedOption = this.options[this.selectedIndex];
-                    provinsiIdHidden.value = selectedOption.value;
+                    if (selectedOption && selectedOption.dataset.provinceName) {
+                        provinsiNameHidden.value = selectedOption.dataset.provinceName;
+                    }
                     loadCities(this.value);
                     hideShippingSection();
+                    
+                    // Reset city selection and name
+                    kotaSelect.value = '';
+                    kotaNameHidden.value = '';
                 });
             }
             
             if (kotaSelect) {
                 kotaSelect.addEventListener('change', function() {
                     const selectedOption = this.options[this.selectedIndex];
-                    kotaIdHidden.value = selectedOption.value;
+                    if (selectedOption && selectedOption.dataset.cityName) {
+                        kotaNameHidden.value = selectedOption.dataset.cityName;
+                    }
                     checkShippingSection();
                 });
             }
@@ -415,17 +423,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
             
-            // Validasi shipping cost tersedia
-            const shippingCost = document.getElementById('shippingCostHidden').value;
-            if (!shippingCost || shippingCost === '0') {
-                if (selectedAddressOption.value === 'new') {
-                    alert('Silakan hitung dan pilih metode pengiriman terlebih dahulu.');
-                } else {
-                    alert('Ongkos kirim belum tersedia untuk alamat ini. Silakan coba lagi atau pilih alamat lain.');
-                }
-                return;
-            }
-            
             if (loadingModal) {
                 loadingModal.style.display = 'flex';
             }
@@ -457,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Set address_id di form data
                 formData.set('address_id', addressId);
                 
-                const newAddressFields = ['nama_depan', 'nama_belakang', 'alamat', 'kelurahan', 'kecamatan', 'kota', 'provinsi', 'kode_pos', 'hp'];
+                const newAddressFields = ['nama_depan', 'nama_belakang', 'alamat', 'kelurahan', 'kecamatan', 'kota', 'kota_name', 'provinsi', 'provinsi_name', 'kode_pos', 'hp'];
                 newAddressFields.forEach(field => {
                     formData.delete(field);
                 });
@@ -582,7 +579,6 @@ document.addEventListener('DOMContentLoaded', function() {
             cityName: addr.dataset.cityName
         });
     });
-    
     // Test function for manual debugging (can be called from browser console)
     window.testAutoCalculate = function(cityId) {
         console.log('Testing auto-calculate with city ID:', cityId);
@@ -591,48 +587,45 @@ document.addEventListener('DOMContentLoaded', function() {
     
     async function loadProvinces() {
         try {
-            const response = await fetch('/api/shipment/provinces');
+            const response = await fetch('/api/wilayah/provinces');
             const data = await response.json();
             
-            if (data.success) {
-                const select = document.getElementById('provinsiSelect');
-                select.innerHTML = '<option value="">Pilih Provinsi</option>';
-                
-                data.data.forEach(province => {
-                    const option = document.createElement('option');
-                    option.value = province.province_id;
-                    option.textContent = province.province;
-                    option.dataset.provinceName = province.province;
-                    select.appendChild(option);
-                });
-            }
+            const select = document.getElementById('provinsiSelect');
+            select.innerHTML = '<option value="">Pilih Provinsi</option>';
+            
+            data.forEach(province => {
+                const option = document.createElement('option');
+                option.value = province.code;
+                option.textContent = province.name;
+                option.dataset.provinceName = province.name;
+                select.appendChild(option);
+            });
         } catch (error) {
             console.error('Error loading provinces:', error);
+            alert('Gagal memuat data provinsi. Silakan refresh halaman.');
         }
     }
     
-    async function loadCities(provinceId) {
+    async function loadCities(provinceCode) {
         const kotaSelect = document.getElementById('kotaSelect');
         kotaSelect.innerHTML = '<option value="">Pilih Kota</option>';
         
-        if (!provinceId) return;
+        if (!provinceCode) return;
         
         try {
-            const response = await fetch(`/api/shipment/cities/${provinceId}`);
-            const data = await response.json();
+            const response = await fetch(`/api/wilayah/regencies/${provinceCode}`);
+            const cities = await response.json();
             
-            if (data.success) {
-                data.data.forEach(city => {
-                    const option = document.createElement('option');
-                    option.value = city.city_id;
-                    option.textContent = `${city.type} ${city.city_name}`;
-                    option.dataset.cityName = city.city_name;
-                    option.dataset.cityType = city.type;
-                    kotaSelect.appendChild(option);
-                });
-            }
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.code;
+                option.textContent = city.name;
+                option.dataset.cityName = city.name;
+                kotaSelect.appendChild(option);
+            });
         } catch (error) {
             console.error('Error loading cities:', error);
+            alert('Gagal memuat data kota/kabupaten. Silakan coba lagi.');
         }
     }
     
@@ -822,10 +815,15 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         // Update hidden inputs for form submission (except shipping cost - will be handled by updateOrderSummary)
-        document.getElementById('shippingCourierHidden').value = selectedShipping.courier;
-        document.getElementById('shippingServiceHidden').value = selectedShipping.service;
-        document.getElementById('shippingDescriptionHidden').value = selectedShipping.description;
-        document.getElementById('shippingEtdHidden').value = selectedShipping.etd;
+        const shippingCourierHidden = document.getElementById('shippingCourierHidden');
+        const shippingServiceHidden = document.getElementById('shippingServiceHidden');
+        const shippingDescriptionHidden = document.getElementById('shippingDescriptionHidden');
+        const shippingEtdHidden = document.getElementById('shippingEtdHidden');
+        
+        if (shippingCourierHidden) shippingCourierHidden.value = selectedShipping.courier;
+        if (shippingServiceHidden) shippingServiceHidden.value = selectedShipping.service;
+        if (shippingDescriptionHidden) shippingDescriptionHidden.value = selectedShipping.description;
+        if (shippingEtdHidden) shippingEtdHidden.value = selectedShipping.etd;
         
         // Update selected shipping info
         const selectedShippingInfo = document.getElementById('selectedShippingInfo');
@@ -897,11 +895,17 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Resetting shipping cost...');
         selectedShipping = null;
         // Reset hidden inputs
-        document.getElementById('shippingCostHidden').value = '';
-        document.getElementById('shippingCourierHidden').value = '';
-        document.getElementById('shippingServiceHidden').value = '';
-        document.getElementById('shippingDescriptionHidden').value = '';
-        document.getElementById('shippingEtdHidden').value = '';
+        const shippingCostHidden = document.getElementById('shippingCostHidden');
+        const shippingCourierHidden = document.getElementById('shippingCourierHidden');
+        const shippingServiceHidden = document.getElementById('shippingServiceHidden');
+        const shippingDescriptionHidden = document.getElementById('shippingDescriptionHidden');
+        const shippingEtdHidden = document.getElementById('shippingEtdHidden');
+        
+        if (shippingCostHidden) shippingCostHidden.value = '';
+        if (shippingCourierHidden) shippingCourierHidden.value = '';
+        if (shippingServiceHidden) shippingServiceHidden.value = '';
+        if (shippingDescriptionHidden) shippingDescriptionHidden.value = '';
+        if (shippingEtdHidden) shippingEtdHidden.value = '';
         
         // Hide existing address shipping info
         const existingAddressShipping = document.getElementById('existingAddressShipping');
@@ -988,10 +992,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Full shipping data:', selectedShipping);
                 
                 // Update hidden form fields (except shipping cost - will be handled by updateOrderSummary)
-                document.getElementById('shippingCourierHidden').value = selectedShipping.courier;
-                document.getElementById('shippingServiceHidden').value = selectedShipping.service;
-                document.getElementById('shippingDescriptionHidden').value = selectedShipping.description;
-                document.getElementById('shippingEtdHidden').value = selectedShipping.etd;
+                const shippingCourierHidden = document.getElementById('shippingCourierHidden');
+                const shippingServiceHidden = document.getElementById('shippingServiceHidden');
+                const shippingDescriptionHidden = document.getElementById('shippingDescriptionHidden');
+                const shippingEtdHidden = document.getElementById('shippingEtdHidden');
+                
+                if (shippingCourierHidden) shippingCourierHidden.value = selectedShipping.courier;
+                if (shippingServiceHidden) shippingServiceHidden.value = selectedShipping.service;
+                if (shippingDescriptionHidden) shippingDescriptionHidden.value = selectedShipping.description;
+                if (shippingEtdHidden) shippingEtdHidden.value = selectedShipping.etd;
                 
                 // Update order summary
                 updateOrderSummary();

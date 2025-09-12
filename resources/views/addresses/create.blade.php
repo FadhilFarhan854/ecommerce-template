@@ -84,10 +84,10 @@
                 </div>
 
                 <div>
-                    <label for="kota" class="block text-sm font-medium text-gray-700 mb-2">Kota *</label>
+                    <label for="kota" class="block text-sm font-medium text-gray-700 mb-2">Kota/Kabupaten *</label>
                     <select id="kota" name="kota" 
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" required disabled>
-                        <option value="">Pilih Kota</option>
+                        <option value="">Pilih Kota/Kabupaten</option>
                     </select>
                     <input type="hidden" id="kota_name" name="kota_name" value="{{ old('kota_name') }}">
                     @error('kota')
@@ -149,24 +149,20 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             provinsiSelect.innerHTML = '<option value="">Loading...</option>';
             
-            const response = await fetch('/api/shipment/provinces', {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            });
+            const response = await fetch('/api/wilayah/provinces');
             
             if (!response.ok) {
                 throw new Error('Failed to load provinces');
             }
             
-            const data = await response.json();
-            provinces = data.data || [];
+            const provinces = await response.json();
             
             provinsiSelect.innerHTML = '<option value="">Pilih Provinsi</option>';
             provinces.forEach(province => {
                 const option = document.createElement('option');
-                option.value = province.province_id;
-                option.textContent = province.province;
+                option.value = province.code;
+                option.textContent = province.name;
+                option.dataset.name = province.name;
                 provinsiSelect.appendChild(option);
             });
 
@@ -185,32 +181,29 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error loading provinces:', error);
             provinsiSelect.innerHTML = '<option value="">Error loading provinces</option>';
+            showError('Gagal memuat data provinsi. Silakan refresh halaman.');
         }
     }
 
-    async function loadCities(provinceId) {
+    async function loadCities(provinceCode) {
         try {
             kotaSelect.innerHTML = '<option value="">Loading...</option>';
             kotaSelect.disabled = true;
             
-            const response = await fetch(`/api/shipment/cities/${provinceId}`, {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            });
+            const response = await fetch(`/api/wilayah/regencies/${provinceCode}`);
             
             if (!response.ok) {
                 throw new Error('Failed to load cities');
             }
             
-            const data = await response.json();
-            cities = data.data || [];
+            const cities = await response.json();
             
-            kotaSelect.innerHTML = '<option value="">Pilih Kota</option>';
+            kotaSelect.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>';
             cities.forEach(city => {
                 const option = document.createElement('option');
-                option.value = city.city_id;
-                option.textContent = `${city.type} ${city.city_name}`;
+                option.value = city.code;
+                option.textContent = city.name;
+                option.dataset.name = city.name;
                 kotaSelect.appendChild(option);
             });
             
@@ -220,27 +213,28 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error loading cities:', error);
             kotaSelect.innerHTML = '<option value="">Error loading cities</option>';
             kotaSelect.disabled = false;
+            showError('Gagal memuat data kota/kabupaten. Silakan pilih provinsi lagi.');
         }
     }
 
     // Province change handler
     provinsiSelect.addEventListener('change', function() {
-        const provinceId = this.value;
+        const provinceCode = this.value;
         
         // Reset city selection
-        kotaSelect.innerHTML = '<option value="">Pilih Kota</option>';
+        kotaSelect.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>';
         kotaSelect.disabled = true;
         kotaNameInput.value = '';
         
-        if (provinceId) {
+        if (provinceCode) {
             // Set province name
-            const selectedProvince = provinces.find(p => p.province_id == provinceId);
-            if (selectedProvince) {
-                provinsiNameInput.value = selectedProvince.province;
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.dataset.name) {
+                provinsiNameInput.value = selectedOption.dataset.name;
             }
             
             // Load cities for selected province
-            loadCities(provinceId);
+            loadCities(provinceCode);
         } else {
             provinsiNameInput.value = '';
         }
@@ -248,12 +242,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // City change handler
     kotaSelect.addEventListener('change', function() {
-        const cityId = this.value;
+        const cityCode = this.value;
         
-        if (cityId) {
-            const selectedCity = cities.find(c => c.city_id == cityId);
-            if (selectedCity) {
-                kotaNameInput.value = `${selectedCity.type} ${selectedCity.city_name}`;
+        if (cityCode) {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.dataset.name) {
+                kotaNameInput.value = selectedOption.dataset.name;
             }
         } else {
             kotaNameInput.value = '';
@@ -265,10 +259,42 @@ document.addEventListener('DOMContentLoaded', function() {
         // Validate that province and city names are set
         if (!provinsiNameInput.value || !kotaNameInput.value) {
             e.preventDefault();
-            alert('Please select both province and city from the dropdown lists.');
+            showError('Silakan pilih provinsi dan kota/kabupaten dari dropdown yang tersedia.');
             return false;
         }
     });
+
+    // Error message function
+    function showError(message) {
+        // Remove existing error messages
+        const existingError = document.querySelector('.wilayah-error');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        // Create new error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'wilayah-error bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4';
+        errorDiv.innerHTML = `
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <span>${message}</span>
+            </div>
+        `;
+
+        // Insert after the form title
+        const title = document.querySelector('h1');
+        title.parentNode.insertBefore(errorDiv, title.nextSibling);
+
+        // Auto remove after 10 seconds
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+        }, 10000);
+    }
 });
 </script>
 @endsection

@@ -97,8 +97,8 @@ return [
             ['text' => 'Beranda', 'url' => '/', 'anchor' => '#home'],
             ['text' => 'Tentang', 'url' => '/#about', 'anchor' => '#about'],
             ['text' => 'Produk', 'url' => '/catalog', 'anchor' => '#catalog'],
-            ['text' => 'Kontak', 'url' => '#contact', 'anchor' => '#contact'],
-            ['text' => 'FAQ', 'url' => '/faq', 'anchor' => '#faq'],
+            ['text' => 'Kontak', 'url' => '/#contact', 'anchor' => '#contact'],
+            ['text' => 'FAQ', 'url' => '/faqs', 'anchor' => '#faq'],
         ],
         'admin_menu' =>[
             ['text' => 'Dashboard', 'url' => '/admin-dashboard', 'anchor' => '#dashboard'],
@@ -123,21 +123,18 @@ return [
             'services' => [
                 'title' => 'Layanan',
                 'items' => [
-                    ['text' => 'Bantuan Pelanggan', 'url' => '#'],
-                    ['text' => 'Kebijakan Pengembalian', 'url' => '#'],
-                    ['text' => 'Metode Pembayaran', 'url' => '#'],
-                    ['text' => 'Pengiriman', 'url' => '#'],
-                    ['text' => 'FAQ', 'url' => '#'],
+                    ['text' => 'FAQ', 'url' => '/faqs'],
+                    ['text' => 'Layanan Pelanggan', 'url' => '/#kontak'],
+                   
                 ],
             ],
             'information' => [
                 'title' => 'Informasi',
                 'items' => [
-                    ['text' => 'Tentang Kami', 'url' => '#'],
+                    ['text' => 'Tentang Kami', 'url' => '/#about'],
                     ['text' => 'Syarat & Ketentuan', 'url' => '#'],
-                    ['text' => 'Kebijakan Privasi', 'url' => '#'],
-                    ['text' => 'Karir', 'url' => '#'],
-                    ['text' => 'Blog', 'url' => '#'],
+                   
+                    
                 ],
             ],
         ],

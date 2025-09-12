@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Logo
+    |--------------------------------------------------------------------------
+    |
+    | This value is the path to your application's logo, which will be used
+    | in the navigation bar and other UI elements.
+    |
+    */
+
+    'site_logo' => env('SITE_LOGO', '/images/logo.png'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

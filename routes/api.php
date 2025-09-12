@@ -30,6 +30,14 @@ Route::get('/health', function () {
     ]);
 });
 
+// Wilayah.id API proxy routes
+Route::prefix('wilayah')->group(function () {
+    Route::get('/provinces', [App\Http\Controllers\WilayahController::class, 'getProvinces']);
+    Route::get('/regencies/{provinceCode}', [App\Http\Controllers\WilayahController::class, 'getRegencies']);
+    Route::get('/districts/{regencyCode}', [App\Http\Controllers\WilayahController::class, 'getDistricts']);
+    Route::delete('/cache', [App\Http\Controllers\WilayahController::class, 'clearCache'])->middleware('auth');
+});
+
 // Shipment Routes
 Route::prefix('shipment')->group(function () {
     Route::get('/provinces', [App\Http\Controllers\ShipmentController::class, 'getProvinces']);

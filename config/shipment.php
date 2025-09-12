@@ -11,7 +11,7 @@ return [
     | shipment costs are not calculated.
     |
     */
-    'use_shipment' => env('USE_SHIPMENT', true),
+    'use_shipment' => env('USE_SHIPMENT', false),
 
     /*
     |--------------------------------------------------------------------------

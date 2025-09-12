@@ -73,7 +73,7 @@ Route::middleware('auth')->group(function () {
 
 // Public routes
 Route::get('/catalog', [ProductController::class, 'catalog'])->name('products.catalog');
-Route::get('/product/{product}', [ProductController::class, 'showProduct'])->name('products.show-detail');
+Route::get('/product/{product}', [ProductController::class, 'show'])->name('products.show-detail');
 Route::get('/test-cart', function () {
     return view('test-cart');
 })->name('test.cart');

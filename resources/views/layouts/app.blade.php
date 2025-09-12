@@ -38,18 +38,34 @@
         <!-- Header -->
         <header class="bg-white shadow-lg sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <nav class="flex justify-between items-center py-4">
-                    <div class="text-2xl font-bold text-gray-900">
-                        {{ $pageData['site']['name'] ?? config('app.name', 'E-Commerce Template') }}
+                <nav class="flex justify-between items-center py-3 lg:py-4">
+                    <!-- Logo and Brand -->
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-lg shadow-sm">
+                            <img src="{{ config('app.site_logo') }}" 
+                                 alt="{{ config('app.name') }}" 
+                                 class="w-full h-full object-contain rounded-lg">
+                        </div>
+                        <div class="hidden sm:block">
+                            <h1 class="text-lg lg:text-2xl font-bold text-gray-900">
+                                {{ $pageData['site']['name'] ?? config('app.name', 'E-Commerce Template') }}
+                            </h1>
+                            <p class="text-xs lg:text-sm text-gray-600 -mt-1">Perfume Collection</p>
+                        </div>
+                        <div class="sm:hidden">
+                            <h1 class="text-lg font-bold text-gray-900">
+                                {{ substr($pageData['site']['name'] ?? config('app.name', 'TokoKu'), 0, 8) }}
+                            </h1>
+                        </div>
                     </div>
                     
                     <!-- Desktop Navigation -->
-                    <ul class="hidden md:flex space-x-8">
+                    <ul class="hidden lg:flex space-x-8">
                         @if(isset($pageData['navigation']['main_menu']))
                             @if(auth()->check() && auth()->user()->role === 'admin' && isset($pageData['navigation']['admin_menu']))
                                 @foreach($pageData['navigation']['admin_menu'] as $menu)
                                     <li>
-                                        <a href="{{ $menu['url'] }}" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300">
+                                        <a href="{{ $menu['url'] }}" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300 text-sm lg:text-base">
                                             {{ $menu['text'] }}
                                         </a>
                                     </li>
@@ -57,38 +73,37 @@
                             @else
                                 @foreach($pageData['navigation']['main_menu'] as $menu)
                                     <li>
-                                        <a href="{{ $menu['url'] }}" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300">
+                                        <a href="{{ $menu['url'] }}" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300 text-sm lg:text-base">
                                             {{ $menu['text'] }}
                                         </a>
                                     </li>
                                 @endforeach
                             @endif
                         @else
-                            <li><a href="{{ url('/') }}" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300">Beranda</a></li>
-                            <li><a href="#about" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300">Tentang</a></li>
-                            <li><a href="{{ route('products.catalog') }}" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300">Produk</a></li>
-                            <li><a href="#contact" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300">Kontak</a></li>
+                            <li><a href="{{ url('/') }}" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300 text-sm lg:text-base">Beranda</a></li>
+                            <li><a href="#about" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300 text-sm lg:text-base">Tentang</a></li>
+                            <li><a href="{{ route('products.catalog') }}" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300 text-sm lg:text-base">Produk</a></li>
+                            <li><a href="#contact" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-300 text-sm lg:text-base">Kontak</a></li>
                         @endif
                     </ul>
                     
                     <!-- Authentication Navigation -->
-                    <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 lg:space-x-4">
                         @auth
                             @if(auth()->check() && auth()->user()->role === 'customer')
                             <!-- Cart Icon -->
                             <div class="relative">
-                                <a href="{{ route('cart.index') }}" class="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 relative">
-                                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <a href="{{ route('cart.index') }}" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 relative">
+                                    <svg class="w-5 h-5 lg:w-6 lg:h-6 text-gray-600 hover:text-blue-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0H17M9 13h8"></path>
                                     </svg>
-                                    
                                 </a>
                             </div>
                             @endif
                             <!-- User Menu -->
                             <div class="relative">
-                                <button onclick="toggleDropdown(event)" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
-                                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold hover:bg-blue-700 transition-colors duration-200">
+                                <button onclick="toggleDropdown(event)" class="flex items-center space-x-2 p-1 lg:p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
+                                    <div class="w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold hover:bg-blue-700 transition-colors duration-200 text-sm lg:text-base">
                                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                     </div>
                                 </button>
@@ -153,14 +168,14 @@
                             </div>
                         @else
                             <!-- Guest Navigation -->
-                            <div class="flex items-center space-x-3">
+                            <div class="flex items-center space-x-2 lg:space-x-3">
                                 @if (Route::has('login'))
-                                    <a href="{{ route('login') }}" class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200">
+                                    <a href="{{ route('login') }}" class="px-3 py-2 lg:px-4 lg:py-2 text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 text-sm lg:text-base">
                                         Masuk
                                     </a>
                                 @endif
                                 @if (Route::has('register'))
-                                    <a href="{{ route('register') }}" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors duration-200">
+                                    <a href="{{ route('register') }}" class="px-4 py-2 lg:px-6 lg:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors duration-200 text-sm lg:text-base">
                                         Daftar
                                     </a>
                                 @endif
@@ -168,7 +183,7 @@
                         @endauth
                         
                         <!-- Mobile Menu Button -->
-                        <button class="md:hidden p-2 rounded-lg hover:bg-gray-100" onclick="toggleMobileMenu()">
+                        <button class="lg:hidden p-2 rounded-lg hover:bg-gray-100 ml-2" onclick="toggleMobileMenu()">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                             </svg>
@@ -177,27 +192,44 @@
                 </nav>
                 
                 <!-- Mobile Navigation -->
-                <div id="mobileMenu" class="hidden md:hidden border-t border-gray-200 py-4">
-                    @if(isset($pageData['navigation']['main_menu']))
-                        @if(auth()->check() && auth()->user()->role === 'admin' && isset($pageData['navigation']['admin_menu']))
-                            @foreach($pageData['navigation']['admin_menu'] as $menu)
-                                <a href="{{ $menu['url'] }}" class="block py-2 text-gray-600 hover:text-blue-600 font-medium">
-                                    {{ $menu['text'] }}
-                                </a>
-                            @endforeach
+                <div id="mobileMenu" class="hidden lg:hidden border-t border-gray-200 py-4">
+                    <div class="space-y-2">
+                        @if(isset($pageData['navigation']['main_menu']))
+                            @if(auth()->check() && auth()->user()->role === 'admin' && isset($pageData['navigation']['admin_menu']))
+                                @foreach($pageData['navigation']['admin_menu'] as $menu)
+                                    <a href="{{ $menu['url'] }}" class="block py-3 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 font-medium rounded-lg transition-colors duration-200">
+                                        {{ $menu['text'] }}
+                                    </a>
+                                @endforeach
+                            @else
+                                @foreach($pageData['navigation']['main_menu'] as $menu)
+                                    <a href="{{ $menu['url'] }}" class="block py-3 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 font-medium rounded-lg transition-colors duration-200">
+                                        {{ $menu['text'] }}
+                                    </a>
+                                @endforeach
+                            @endif
                         @else
-                            @foreach($pageData['navigation']['main_menu'] as $menu)
-                                <a href="{{ $menu['url'] }}" class="block py-2 text-gray-600 hover:text-blue-600 font-medium">
-                                    {{ $menu['text'] }}
-                                </a>
-                            @endforeach
+                            <a href="{{ url('/') }}" class="block py-3 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 font-medium rounded-lg transition-colors duration-200">Beranda</a>
+                            <a href="#about" class="block py-3 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 font-medium rounded-lg transition-colors duration-200">Tentang</a>
+                            <a href="{{ route('products.catalog') }}" class="block py-3 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 font-medium rounded-lg transition-colors duration-200">Produk</a>
+                            <a href="#contact" class="block py-3 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 font-medium rounded-lg transition-colors duration-200">Kontak</a>
                         @endif
-                    @else
-                        <a href="{{ url('/') }}" class="block py-2 text-gray-600 hover:text-blue-600 font-medium">Beranda</a>
-                        <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600 font-medium">Tentang</a>
-                        <a href="{{ route('products.catalog') }}" class="block py-2 text-gray-600 hover:text-blue-600 font-medium">Produk</a>
-                        <a href="#contact" class="block py-2 text-gray-600 hover:text-blue-600 font-medium">Kontak</a>
-                    @endif
+                        
+                        @guest
+                            <div class="pt-4 border-t border-gray-200 mt-4">
+                                @if (Route::has('login'))
+                                    <a href="{{ route('login') }}" class="block py-3 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 font-medium rounded-lg transition-colors duration-200">
+                                        Masuk
+                                    </a>
+                                @endif
+                                @if (Route::has('register'))
+                                    <a href="{{ route('register') }}" class="block py-3 px-2 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-lg transition-colors duration-200 text-center mt-2">
+                                        Daftar
+                                    </a>
+                                @endif
+                            </div>
+                        @endguest
+                    </div>
                 </div>
             </div>
         </header>
