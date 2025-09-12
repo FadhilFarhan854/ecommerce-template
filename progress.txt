@@ -34,3 +34,34 @@ Note:
 
 Untuk semua data masih bersifat dummy karena baru 25% yang berfokus pada tampilan dasar dari website
 
+
+
+
+Laporan progres 12 September 2025 (50%)
+
+Link Website Sementara : https://ecommerce-parfum.exaapk.com/
+
+- [x] Theme optimization -> warna utama biru dan hijau mengikuti warna dominan logo
+- [x] penyesuaian landing page mejadi lebih user friendly :
+        a. penuh informasi penting seperti produk populer, alamat, informasi toko, keunggulan
+        b. UI yang tidak mencolok, tetapi ramah di mata pengguna 
+- [x] penyesuaian UI halaman catalog, mengikuti landing page
+- [x] penyesuaian UI detail produk
+- [x] Penyesuaian UI cart dan checkout
+- [x] Penyesuaian UI produk manjemen di admin
+- [x] 
+- [x] 
+- [x] 
+- [x] 
+- [x] 
+- [x] 
+
+
+Note:
+1. fungsionalitas beberapa belum ditambahkan
+2. UI dan theme warna masih bersifat sementara karena di 25% ini berfokus ke fungsionalitas aplikasi
+3. data sudah di integrasikan dengan database
+
+
+Untuk semua data masih bersifat dummy karena baru 25% yang berfokus pada tampilan dasar dari website
+
