@@ -30,6 +30,21 @@ Route::get('/health', function () {
     ]);
 });
 
+// Authentication API Routes
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [App\Http\Controllers\AuthController::class, 'register']);
+    Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
+    Route::post('/resend-verification', [App\Http\Controllers\AuthController::class, 'resendVerification']);
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/profile', [App\Http\Controllers\AuthController::class, 'profile']);
+        Route::put('/profile', [App\Http\Controllers\AuthController::class, 'updateProfile']);
+        Route::post('/change-password', [App\Http\Controllers\AuthController::class, 'changePassword']);
+        Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
+        Route::post('/logout-all', [App\Http\Controllers\AuthController::class, 'logoutAll']);
+    });
+});
+
 // Wilayah.id API proxy routes
 Route::prefix('wilayah')->group(function () {
     Route::get('/provinces', [App\Http\Controllers\WilayahController::class, 'getProvinces']);

@@ -53,6 +53,12 @@
             </button>
         </form>
 
+        <div style="text-align: center; margin-top: 1rem;">
+            <a href="{{ route('password.request') }}" style="color: #3b82f6; text-decoration: none; font-size: 0.9rem;">
+                Lupa password?
+            </a>
+        </div>
+
         <div style="text-align: center; margin-top: 1.5rem;">
             <p style="color: #6b7280;">
                 Belum punya akun? 

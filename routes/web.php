@@ -15,6 +15,7 @@ use App\Http\Controllers\BannerController;
 use App\Http\Controllers\FAQController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\ManualVerificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingPageController::class, 'index'])->name('home');
@@ -52,23 +53,39 @@ Route::middleware('guest')->group(function () {
     
     Route::post('/login', [AuthController::class, 'webLogin'])->name('login.post');
     Route::post('/register', [AuthController::class, 'webRegister'])->name('register.post');
+    
+    // Simple Forgot Password (Manual)
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetInstructions'])->name('password.email');
 });
+
+// Manual Verification Routes (Public - tidak perlu auth)
+Route::get('/verify-email', [ManualVerificationController::class, 'verifyEmail'])->name('manual.verify.email');
+Route::get('/verification-success', [ManualVerificationController::class, 'showVerificationSuccess'])->name('verification.success');
+Route::post('/resend-verification', [ManualVerificationController::class, 'resendVerification'])->name('manual.resend.verification');
+
+// Email Verification Routes (New integrated system)
+Route::get('/email/verify', [AuthController::class, 'verifyEmail'])->name('verify.email');
+Route::post('/email/resend', [AuthController::class, 'resendVerification'])->name('verification.send');
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'webLogout'])->name('logout');
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-        
-    })->name('dashboard');
+    
+    // Routes yang memerlukan email verification
+    Route::middleware(['verified'])->group(function () {
+        Route::get('/dashboard', function () {
+            return view('dashboard');
+        })->name('dashboard');
 
-    Route::get('/admin-dashboard',[DashboardController::class, 'index'] )->name('admin.dashboard');
+        Route::get('/admin-dashboard',[DashboardController::class, 'index'] )->name('admin.dashboard');
 
-    // Profile routes
-    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/profile/change-password', [App\Http\Controllers\ProfileController::class, 'editPassword'])->name('profile.change-password');
-    Route::put('/profile/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.update-password');
+        // Profile routes
+        Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+        Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+        Route::get('/profile/change-password', [App\Http\Controllers\ProfileController::class, 'editPassword'])->name('profile.change-password');
+        Route::put('/profile/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    });
 });
 
 // Public routes

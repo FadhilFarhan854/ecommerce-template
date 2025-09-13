@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Str;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 class AuthController extends Controller
 {
@@ -24,17 +31,19 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
             'role' => $request->role ?? 'customer',
+            'email_verification_token' => Str::random(64),
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Send verification email
+        $this->sendVerificationEmail($user);
 
         return response()->json([
             'success' => true,
-            'message' => 'User registered successfully',
+            'message' => 'Email verifikasi telah dikirim! Periksa inbox atau folder spam Anda.',
             'data' => [
-                'user' => $user,
-                'token' => $token,
-                'token_type' => 'Bearer',
+                'user' => $user->makeHidden(['email_verification_token']),
+                'verification_sent' => true,
+                'email' => $user->email
             ]
         ], 201);
     }
@@ -224,19 +233,67 @@ class AuthController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
             'password' => Hash::make($request->password),
             'role' => 'customer',
+            'email_verification_token' => Str::random(64),
         ]);
 
-        Auth::login($user);
+        // Send verification email
+        $this->sendVerificationEmail($user);
 
-        return redirect('/');
+        // Return JSON for AJAX request
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Email verifikasi telah dikirim! Periksa inbox atau folder spam Anda.',
+                'data' => [
+                    'user' => $user->makeHidden(['email_verification_token']),
+                    'verification_sent' => true,
+                    'email' => $user->email
+                ]
+            ], 201);
+        }
+
+        // Traditional form redirect
+        return redirect('/login')->with('success', 'Akun berhasil dibuat! Email verifikasi telah dikirim. Periksa inbox atau folder spam Anda.');
+    }
+
+    /**
+     * Send manual verification email
+     */
+    private function sendManualVerificationEmail($user)
+    {
+        $token = $this->generateVerificationToken($user);
+        $verificationUrl = route('manual.verify.email') . '?token=' . $token . '&email=' . urlencode($user->email);
+
+        try {
+            \Illuminate\Support\Facades\Mail::send('emails.manual-verify-email', [
+                'user' => $user,
+                'verificationUrl' => $verificationUrl,
+                'token' => $token
+            ], function ($message) use ($user) {
+                $message->to($user->email, $user->name)
+                        ->subject('Verifikasi Email - ' . config('landing.site.name', 'Rama Perfume'));
+            });
+        } catch (\Exception $e) {
+            \Log::error('Failed to send verification email: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate simple verification token
+     */
+    private function generateVerificationToken($user)
+    {
+        return hash('sha256', $user->email . $user->created_at . config('app.key'));
     }
 
     /**
@@ -249,5 +306,148 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         
         return redirect('/');
+    }
+
+    // ============ SIMPLE FORGOT PASSWORD (Manual) ============
+
+    /**
+     * Show forgot password form
+     */
+    public function showForgotPasswordForm()
+    {
+        return view('auth.forgot-password-simple');
+    }
+
+    /**
+     * Send simple reset instructions
+     */
+    public function sendResetInstructions(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'Email tidak ditemukan dalam sistem kami.']);
+        }
+
+        // Generate simple reset token
+        $token = $this->generatePasswordResetToken($user);
+        $resetUrl = route('manual.reset.password') . '?token=' . $token . '&email=' . urlencode($user->email);
+
+        try {
+            \Illuminate\Support\Facades\Mail::send('emails.manual-reset-password', [
+                'user' => $user,
+                'resetUrl' => $resetUrl,
+                'token' => $token
+            ], function ($message) use ($user) {
+                $message->to($user->email, $user->name)
+                        ->subject('Reset Password - ' . config('landing.site.name', 'Rama Perfume'));
+            });
+
+            return back()->with('status', 'Instruksi reset password telah dikirim ke email Anda!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['email' => 'Gagal mengirim email reset password.']);
+        }
+    }
+
+    /**
+     * Generate simple password reset token
+     */
+    private function generatePasswordResetToken($user)
+    {
+        return hash('sha256', $user->email . $user->password . now()->timestamp . config('app.key'));
+    }
+
+    /**
+     * Send verification email
+     */
+    private function sendVerificationEmail($user)
+    {
+        $verificationUrl = route('verify.email', [
+            'token' => $user->email_verification_token,
+            'email' => $user->email
+        ]);
+
+        try {
+            Mail::send(['html' => 'emails.verify-email', 'text' => 'emails.verify-email-text'], [
+                'user' => $user,
+                'verificationUrl' => $verificationUrl
+            ], function ($message) use ($user) {
+                $message->to($user->email, $user->name)
+                        ->subject('Verifikasi Email - ' . config('landing.site.name', 'Rama Perfume'))
+                        ->replyTo(config('mail.from.address'), config('landing.site.name', 'Rama Perfume'));
+            });
+        } catch (\Exception $e) {
+            \Log::error('Failed to send verification email: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Verify email with token
+     */
+    public function verifyEmail(Request $request)
+    {
+        $token = $request->get('token');
+        $email = $request->get('email');
+
+        if (!$token || !$email) {
+            return redirect('/login')->with('error', 'Link verifikasi tidak valid.');
+        }
+
+        $user = User::where('email', $email)
+                   ->where('email_verification_token', $token)
+                   ->first();
+
+        if (!$user) {
+            return redirect('/login')->with('error', 'Link verifikasi tidak valid atau sudah expired.');
+        }
+
+        if ($user->email_verified_at) {
+            return redirect('/login')->with('success', 'Email sudah terverifikasi sebelumnya. Silakan login.');
+        }
+
+        // Update verified_at
+        $user->update([
+            'email_verified_at' => now(),
+            'email_verification_token' => null
+        ]);
+
+        return redirect('/login')->with('success', 'Email berhasil diverifikasi! Silakan login dengan akun Anda.');
+    }
+
+    /**
+     * Resend verification email
+     */
+    public function resendVerification(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email tidak ditemukan.'
+            ], 404);
+        }
+
+        if ($user->email_verified_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email sudah terverifikasi.'
+            ], 400);
+        }
+
+        // Generate new token
+        $user->update(['email_verification_token' => Str::random(64)]);
+        
+        // Send email
+        $this->sendVerificationEmail($user);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email verifikasi telah dikirim ulang! Periksa inbox atau folder spam Anda.'
+        ]);
     }
 }
