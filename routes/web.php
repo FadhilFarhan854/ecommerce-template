@@ -57,6 +57,10 @@ Route::middleware('guest')->group(function () {
     // Simple Forgot Password (Manual)
     Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetInstructions'])->name('password.email');
+    
+    // Manual Password Reset Routes (Public - accessible with token)
+    Route::get('/reset-password', [AuthController::class, 'showResetPasswordForm'])->name('manual.reset.password');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('manual.reset.password.post');
 });
 
 // Manual Verification Routes (Public - tidak perlu auth)

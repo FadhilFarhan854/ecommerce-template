@@ -356,7 +356,9 @@ class AuthController extends Controller
      */
     private function generatePasswordResetToken($user)
     {
-        return hash('sha256', $user->email . $user->password . now()->timestamp . config('app.key'));
+        // Include timestamp for expiration (valid for 1 hour)
+        $timestamp = now()->addHour()->timestamp;
+        return hash('sha256', $user->email . $user->password . $timestamp . config('app.key')) . '.' . $timestamp;
     }
 
     /**
@@ -370,13 +372,12 @@ class AuthController extends Controller
         ]);
 
         try {
-            Mail::send(['html' => 'emails.verify-email', 'text' => 'emails.verify-email-text'], [
+            Mail::send('emails.verify-email', [
                 'user' => $user,
                 'verificationUrl' => $verificationUrl
             ], function ($message) use ($user) {
                 $message->to($user->email, $user->name)
-                        ->subject('Verifikasi Email - ' . config('landing.site.name', 'Rama Perfume'))
-                        ->replyTo(config('mail.from.address'), config('landing.site.name', 'Rama Perfume'));
+                        ->subject('Verifikasi Email - ' . config('landing.site.name', 'Rama Perfume'));
             });
         } catch (\Exception $e) {
             \Log::error('Failed to send verification email: ' . $e->getMessage());
@@ -449,5 +450,83 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Email verifikasi telah dikirim ulang! Periksa inbox atau folder spam Anda.'
         ]);
+    }
+
+    /**
+     * Show password reset form
+     */
+    public function showResetPasswordForm(Request $request)
+    {
+        $token = $request->get('token');
+        $email = $request->get('email');
+
+        if (!$token || !$email) {
+            return redirect('/login')->with('error', 'Link reset password tidak valid.');
+        }
+
+        // Verify the reset token
+        $user = User::where('email', $email)->first();
+        if (!$user || !$this->verifyPasswordResetToken($user, $token)) {
+            return redirect('/login')->with('error', 'Link reset password tidak valid atau sudah expired.');
+        }
+
+        return view('auth.reset-password', compact('token', 'email'));
+    }
+
+    /**
+     * Handle password reset
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Find user and verify token
+        $user = User::where('email', $request->email)->first();
+        
+        if (!$user) {
+            return back()->withErrors(['email' => 'Email tidak ditemukan.']);
+        }
+
+        if (!$this->verifyPasswordResetToken($user, $request->token)) {
+            return back()->withErrors(['token' => 'Token reset password tidak valid atau sudah expired.']);
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        // Optionally, revoke all tokens for security
+        $user->tokens()->delete();
+
+        return redirect('/login')->with('success', 'Password berhasil direset! Silakan login dengan password baru Anda.');
+    }
+
+    /**
+     * Verify password reset token
+     */
+    private function verifyPasswordResetToken($user, $token)
+    {
+        // Split token and timestamp
+        $parts = explode('.', $token);
+        if (count($parts) !== 2) {
+            return false;
+        }
+
+        [$tokenHash, $timestamp] = $parts;
+
+        // Check if token is expired (older than 1 hour)
+        if (now()->timestamp > $timestamp) {
+            return false;
+        }
+
+        // Generate expected token with the same timestamp
+        $expectedToken = hash('sha256', $user->email . $user->password . $timestamp . config('app.key'));
+        
+        return hash_equals($expectedToken, $tokenHash);
     }
 }

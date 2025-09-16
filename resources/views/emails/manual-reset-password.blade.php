@@ -19,12 +19,16 @@
                 Anda menerima email ini karena ada permintaan reset password untuk akun Anda.
             </p>
 
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ $resetUrl }}" 
+                   style="display: inline-block; background: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    🔐 Reset Password Sekarang
+                </a>
+            </div>
+
             <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0;">
                 <p style="margin: 0; font-size: 14px; color: #92400e;">
-                    <strong>🔑 Instruksi Reset Password:</strong><br>
-                    1. Hubungi admin melalui WhatsApp/Email<br>
-                    2. Berikan informasi akun Anda (nama & email)<br>
-                    3. Admin akan membantu reset password Anda
+                    <strong>⏰ Penting:</strong> Link ini hanya berlaku selama 1 jam. Jika sudah expired, silakan lakukan request reset password baru.
                 </p>
             </div>
 
@@ -37,20 +41,12 @@
                 </p>
             </div>
 
-            <div style="text-align: center; margin: 30px 0;">
-                <div style="background: #e5e7eb; padding: 20px; border-radius: 8px;">
-                    <h3 style="color: #1f2937; margin-bottom: 15px;">📞 Hubungi Admin</h3>
-                    
-                    <a href="https://wa.me/{{ str_replace(['+', '-', ' '], '', config('landing.contact.whatsapp', '6281234567890')) }}?text=Halo,%20saya%20ingin%20reset%20password%20akun%20{{ $user->email }}" 
-                       style="display: inline-block; background: #10b981; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 5px;">
-                        💬 WhatsApp Admin
-                    </a>
-                    
-                    <a href="mailto:{{ config('landing.contact.email', 'admin@ramaperfume.com') }}?subject=Reset Password Request&body=Halo, saya ingin reset password untuk akun: {{ $user->email }}" 
-                       style="display: inline-block; background: #3b82f6; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 5px;">
-                        📧 Email Admin
-                    </a>
-                </div>
+            <div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                <p style="margin: 0; font-size: 12px; color: #6b7280;">
+                    <strong>� Tidak bisa klik tombol?</strong><br>
+                    Salin dan paste link berikut ke browser Anda:<br>
+                    <code style="background: #e5e7eb; padding: 2px 4px; border-radius: 3px; font-family: monospace;">{{ $resetUrl }}</code>
+                </p>
             </div>
 
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">

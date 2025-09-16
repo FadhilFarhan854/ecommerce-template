@@ -49,19 +49,14 @@ Link Website Sementara : https://ecommerce-parfum.exaapk.com/
 - [x] penyesuaian UI detail produk
 - [x] Penyesuaian UI cart dan checkout
 - [x] Penyesuaian UI produk manjemen di admin
-- [x] 
-- [x] 
-- [x] 
-- [x] 
-- [x] 
-- [x] 
-
+- [x] Penyesuaian UI faq
 
 Note:
 1. fungsionalitas beberapa belum ditambahkan
-2. UI dan theme warna masih bersifat sementara karena di 25% ini berfokus ke fungsionalitas aplikasi
-3. data sudah di integrasikan dengan database
+2. theme berwarna biru hijau mengikuti warna dominan logo
+3. UI dibuat terinspirasi dari azko tetapi dengan design yang lebih user friendly agar tidak terlalu mirip
+4. data di landing page seperti "sudah beroperasi 5 tahun dll" masih perkiraan, tolong berikan data yang lebih agar infomasi yang ditampilkan akurat
+5. jika ada design ataupun theme yang ingin diubah tolong dibicarakan langsung agar tdak menumpuk dibelakang
 
 
-Untuk semua data masih bersifat dummy karena baru 25% yang berfokus pada tampilan dasar dari website
 
