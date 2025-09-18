@@ -121,6 +121,7 @@
 
 @push('scripts')
 <script>
+    const walkingAnimation = document.getElementById('walking-animation');
     document.addEventListener('DOMContentLoaded', function() {
         // Banner Slider Functionality
         const bannerSlides = document.querySelectorAll('.banner-slide');
@@ -389,7 +390,7 @@
 @section('content')
 <!-- Dynamic Banner Section -->
 @if($banners && $banners->count() > 0)
-<section class="hero-section relative overflow-hidden">
+<section class="hero-section relative overflow-hidden h-screen">
     <div class="banner-slider">
         @foreach($banners as $index => $banner)
         <div class="banner-slide {{ $index === 0 ? 'active' : '' }}" data-slide="{{ $index }}">
@@ -523,15 +524,49 @@
 @endif
 
 <!-- Features Section - AZKO Style Benefits -->
-<section class="py-20 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-          
+<section class="py-20 bg-gray-50 h-screen relative overflow-hidden">
+    <!-- Decorative elements - Right Corner (Circle Pattern) -->
+    <div class="absolute top-0 right-0 w-96 h-96 opacity-8" data-aos="fade-left" data-aos-duration="1200">
+        <!-- Large circles -->
+        <div class="absolute top-8 right-8 w-24 h-24 bg-gradient-to-br from-blue-300 to-green-300 rounded-full animate-pulse"></div>
+        <div class="absolute top-20 right-32 w-16 h-16 bg-gradient-to-br from-green-200 to-blue-200 rounded-full animate-pulse" style="animation-delay: 1.2s;"></div>
+        <div class="absolute top-40 right-20 w-12 h-12 bg-gradient-to-br from-blue-200 to-green-200 rounded-full animate-pulse" style="animation-delay: 2.1s;"></div>
+        
+        <!-- Medium circles -->
+        <div class="absolute top-12 right-60 w-20 h-20 bg-gradient-to-br from-green-300 to-blue-300 rounded-full animate-pulse" style="animation-delay: 0.7s;"></div>
+        <div class="absolute top-32 right-48 w-14 h-14 bg-gradient-to-br from-blue-300 to-green-200 rounded-full animate-pulse" style="animation-delay: 1.8s;"></div>
+    </div>
+    
+    <!-- Decorative elements - Left Corner (Circle Pattern) -->
+    <div class="absolute top-0 left-0 w-80 h-80 opacity-8" data-aos="fade-right" data-aos-duration="1200">
+        <!-- Large circles -->
+        <div class="absolute top-10 left-10 w-24 h-24 bg-gradient-to-br from-green-300 to-blue-300 rounded-full animate-pulse" style="animation-delay: 0.3s;"></div>
+        <div class="absolute top-24 left-28 w-16 h-16 bg-gradient-to-br from-blue-300 to-green-200 rounded-full animate-pulse" style="animation-delay: 1.1s;"></div>
+        <div class="absolute top-40 left-8 w-20 h-20 bg-gradient-to-br from-green-300 to-blue-300 rounded-full animate-pulse" style="animation-delay: 1.7s;"></div>
+        <div class="absolute top-56 left-20 w-14 h-14 bg-gradient-to-br from-blue-300 to-green-300 rounded-full animate-pulse" style="animation-delay: 2.3s;"></div>
+        
+        <!-- Small accent circles -->
+        <div class="absolute top-16 left-50 w-12 h-12 bg-gradient-to-br from-green-300 to-blue-300 rounded-full animate-pulse" style="animation-delay: 0.8s;"></div>
+        <div class="absolute top-48 left-4 w-10 h-10 bg-gradient-to-br from-blue-300 to-green-300 rounded-full animate-pulse" style="animation-delay: 1.9s;"></div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center">
+        <div class="text-center mb-16" data-aos="fade-up" data-aos-duration="800">
+            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                Mengapa Memilih <span class="text-gradient">Kami?</span>
+            </h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+                Pengalaman berbelanja parfum terbaik dengan layanan yang tak tertandingi
+            </p>
+            <div class="inline-flex items-center gap-2 bg-white rounded-full px-6 py-3 shadow-lg">
+                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-sm font-medium text-gray-700">Dipercaya lebih dari 10,000+ pelanggan</span>
+            </div>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200">
             <!-- Feature 1 -->
-            <div class="feature-card bg-white rounded-xl p-8 text-center shadow-lg">
+            <div class="feature-card bg-white rounded-xl p-8 text-center shadow-lg" data-aos="fade-up" data-aos-duration="800" data-aos-delay="300">
                 <div class="w-16 h-16 mx-auto mb-6 bg-blue-gradient rounded-full flex items-center justify-center">
                     <svg class="w-8 h-8 accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -542,7 +577,7 @@
             </div>
             
             <!-- Feature 2 -->
-            <div class="feature-card bg-white rounded-xl p-8 text-center shadow-lg">
+            <div class="feature-card bg-white rounded-xl p-8 text-center shadow-lg" data-aos="fade-up" data-aos-duration="800" data-aos-delay="400">
                 <div class="w-16 h-16 mx-auto mb-6 bg-green-gradient rounded-full flex items-center justify-center">
                     <svg class="w-8 h-8 accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -553,7 +588,7 @@
             </div>
             
             <!-- Feature 3 -->
-            <div class="feature-card bg-white rounded-xl p-8 text-center shadow-lg">
+            <div class="feature-card bg-white rounded-xl p-8 text-center shadow-lg" data-aos="fade-up" data-aos-duration="800" data-aos-delay="500">
                 <div class="w-16 h-16 mx-auto mb-6 bg-blue-gradient rounded-full flex items-center justify-center">
                     <svg class="w-8 h-8 accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
@@ -564,7 +599,7 @@
             </div>
             
             <!-- Feature 4 -->
-            <div class="feature-card bg-white rounded-xl p-8 text-center shadow-lg">
+            <div class="feature-card bg-white rounded-xl p-8 text-center shadow-lg" data-aos="fade-up" data-aos-duration="800" data-aos-delay="600">
                 <div class="w-16 h-16 mx-auto mb-6 bg-green-gradient rounded-full flex items-center justify-center">
                     <svg class="w-8 h-8 accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
@@ -578,10 +613,35 @@
 </section>
 
 <!-- About Section - AZKO Inspired -->
-<section id="about" class="py-16 bg-white">
-    <div  class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<section id="about" class="py-16 bg-white relative overflow-hidden">
+    <!-- Decorative elements - Right Corner (Circle Pattern) -->
+    <div class="absolute top-0 right-0 w-80 h-80 opacity-8" data-aos="fade-left" data-aos-duration="1200" data-aos-delay="200">
+        <!-- Large circles -->
+        <div class="absolute top-8 right-8 w-20 h-20 bg-gradient-to-br from-blue-300 to-green-300 rounded-full animate-pulse"></div>
+        <div class="absolute top-20 right-28 w-14 h-14 bg-gradient-to-br from-green-200 to-blue-200 rounded-full animate-pulse" style="animation-delay: 1.2s;"></div>
+        <div class="absolute top-36 right-16 w-10 h-10 bg-gradient-to-br from-blue-200 to-green-200 rounded-full animate-pulse" style="animation-delay: 2.1s;"></div>
+        
+        <!-- Medium circles -->
+        <div class="absolute top-12 right-44 w-16 h-16 bg-gradient-to-br from-green-300 to-blue-300 rounded-full animate-pulse" style="animation-delay: 0.7s;"></div>
+        <div class="absolute top-28 right-36 w-12 h-12 bg-gradient-to-br from-blue-300 to-green-200 rounded-full animate-pulse" style="animation-delay: 1.8s;"></div>
+    </div>
+    
+    <!-- Decorative elements - Left Corner (Circle Pattern) -->
+    <div class="absolute top-0 left-0 w-72 h-72 opacity-8" data-aos="fade-right" data-aos-duration="1200" data-aos-delay="200">
+        <!-- Large circles -->
+        <div class="absolute top-10 left-10 w-20 h-20 bg-gradient-to-br from-green-300 to-blue-300 rounded-full animate-pulse" style="animation-delay: 0.3s;"></div>
+        <div class="absolute top-24 left-24 w-14 h-14 bg-gradient-to-br from-blue-300 to-green-200 rounded-full animate-pulse" style="animation-delay: 1.1s;"></div>
+        <div class="absolute top-40 left-8 w-16 h-16 bg-gradient-to-br from-green-300 to-blue-300 rounded-full animate-pulse" style="animation-delay: 1.7s;"></div>
+        <div class="absolute top-52 left-18 w-12 h-12 bg-gradient-to-br from-blue-300 to-green-300 rounded-full animate-pulse" style="animation-delay: 2.3s;"></div>
+        
+        <!-- Small accent circles -->
+        <div class="absolute top-16 left-40 w-10 h-10 bg-gradient-to-br from-green-300 to-blue-300 rounded-full animate-pulse" style="animation-delay: 0.8s;"></div>
+        <div class="absolute top-44 left-4 w-8 h-8 bg-gradient-to-br from-blue-300 to-green-300 rounded-full animate-pulse" style="animation-delay: 1.9s;"></div>
+    </div>
+    
+    <div  class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
+            <div data-aos="fade-right" data-aos-duration="1000" data-aos-delay="300">
                 <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-8 leading-tight">
                     Dari sini<br>
                     <span class="text-gradient">bisa lebih</span><br>
@@ -596,7 +656,7 @@
                     {{ $pageData['about']['description'] ?? 'Melanjutkan legasi dalam dunia parfum, ini awal cerita baru kami untuk memperkaya pengalaman aroma dan memperkuat kepercayaan diri dengan inspirasi A-Z yang bisa diandalkan, kini dan seterusnya.' }}
                 </p>
                 
-                <div class="grid grid-cols-3 gap-8 mb-8">
+                <div class="grid grid-cols-3 gap-8 mb-8" data-aos="fade-up" data-aos-duration="800" data-aos-delay="500">
                     <div class="text-center">
                         <div class="text-3xl font-bold accent-blue">5+</div>
                         <div class="text-sm text-gray-600">tahun</div>
@@ -615,7 +675,8 @@
                 </div>
                 
                 <a href="{{ route('products.catalog') }}" 
-                   class="btn-primary-gradient inline-flex items-center gap-3 px-8 py-4 text-white rounded-full font-semibold text-lg">
+                   class="btn-primary-gradient inline-flex items-center gap-3 px-8 py-4 text-white rounded-full font-semibold text-lg"
+                   data-aos="fade-up" data-aos-duration="800" data-aos-delay="700">
                     <span>Lebih Lanjut</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
@@ -623,7 +684,7 @@
                 </a>
             </div>
             
-            <div class="relative">
+            <div class="relative" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="400">
                 <div class="absolute inset-0 bg-green-gradient rounded-3xl transform rotate-6"></div>
                 <div class="relative bg-white rounded-3xl p-8 shadow-2xl">
                     <div class="text-center">

@@ -60,3 +60,32 @@ Note:
 
 
 
+Laporan progres 17 September 2025 (75%)
+
+Link Website Sementara : https://ecommerce-parfum.exaapk.com/
+
+- [x] integrasi register dengan email dengan alur:
+        1. pengguna melakukan registrasi
+        2. email verifikasi terkirim ke pengguna
+        3. penggguna membuka link verifikasi lewat email
+        4. saat link dibuka pengguna otomatis akan terverifikasi dan ditampilkan halaman login 
+- [x] integrasi verifikasi forgot pasword dengan alur:
+        1. pengguna menekan forgot password di halaman login
+        2. email akan dikirm ke email pengguna
+        3. masuk link dari email lalu akan dilempar ke halaman reset password
+        4. login menggunakan password baru
+- [x] improve UI di profile
+- [x] perbaikan UI : 
+        1. mengubah Rama Perfume menjadi RAMA parfum
+        2. membuat halaman di landing page menjadi 1 halaman untuk 1 section
+        3. menambahkan animasi bergerak di navbar
+        4. menambahkan dekorasi dan aos di landing page
+        5. mengubah tampilan search dan filter menjadi di bagian atas pada halaman catalog
+        6. Semua informasi static terkait profile perusahaan, slogan, dll belum ditambahkan sampai ada data yang valid dari client
+        
+
+
+
+
+
+

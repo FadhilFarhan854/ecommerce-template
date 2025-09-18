@@ -16,6 +16,10 @@
         <!-- Heroicons -->
         <script src="https://unpkg.com/heroicons@2.0.18/20/solid/index.js" type="module"></script>
         
+        <!-- AOS (Animate On Scroll) -->
+        <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+        
         <!-- Styles / Scripts -->
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -30,11 +34,61 @@
             .slide.active {
                 opacity: 1;
             }
+            
+            /* Moving text announcement bar */
+            .announcement-bar {
+                background: linear-gradient(90deg, #3B82F6 0%, #1D4ED8 100%);
+                color: white;
+                padding: 8px 0;
+                overflow: hidden;
+                white-space: nowrap;
+                position: sticky;
+                top: 0;
+                z-index: 40;
+            }
+            
+            .moving-text-container {
+                display: inline-block;
+                animation: moveLeft 60s linear infinite;
+                font-size: 14px;
+                font-weight: 500;
+                position: sticky;
+            }
+            
+            .text-item {
+                display: inline-block;
+                margin-right: 150px; /* Large gap between texts */
+            }
+            
+            @keyframes moveLeft {
+                0% {
+                    transform: translateX(100vw);
+                }
+                50% {
+                    transform: translateX(-50%);
+                }
+                100% {
+                    transform: translateX(-50%);
+                }
+            }
+            
+            .announcement-bar:hover .moving-text-container {
+                animation-play-state: paused;
+            }
         </style>
         
         @stack('styles')
     </head>
     <body class="font-inter bg-gray-50">
+        <!-- Moving Announcement Bar - Only on Homepage -->
+        @if(request()->is('/'))
+        <div class="announcement-bar">
+            <div class="moving-text-container" id="movingTextContainer">
+                <!-- Text items will be populated by JavaScript -->
+            </div>
+        </div>
+        @endif
+        
         <!-- Header -->
         <header class="bg-white shadow-lg sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -346,6 +400,42 @@
         @stack('scripts')
         
         <script>
+            // Moving announcement text configuration
+            @if(request()->is('/'))
+            const announcementTexts = [
+                'Selamat Datang di {{ $pageData["site"]["name"] ?? config("app.name", "E-Commerce Template") }}',
+                'Dapatkan Diskon Hingga 50% untuk Parfum Pilihan Terbaik',
+                'Gratis Ongkir untuk Pembelian di Atas Rp 500.000',
+                'Produk Original & Berkualitas Terjamin 100%',
+                'Follow Instagram Kami untuk Update Promo Terbaru',
+                'Koleksi Parfum Premium dari Brand Ternama',
+                'Dapatkan Free Sample untuk Setiap Pembelian',
+                'Rating 4.9/5 dari Ribuan Customer Puas'
+            ];
+
+            function initMovingText() {
+                const container = document.getElementById('movingTextContainer');
+                if (!container) return;
+
+                // Create seamless text content with proper gaps
+                let textContent = '';
+                
+                // Duplicate the array to ensure seamless loop
+                const duplicatedTexts = [...announcementTexts, ...announcementTexts];
+                
+                duplicatedTexts.forEach((text, index) => {
+                    textContent += `<span class="text-item">${text}</span>`;
+                });
+
+                container.innerHTML = textContent;
+            }
+
+            // Initialize on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                initMovingText();
+            });
+            @endif
+
             function toggleDropdown(event) {
                 event.preventDefault();
                 const dropdown = document.getElementById('userDropdown');
@@ -401,6 +491,16 @@
             // Function to update cart count (called from other pages)
             window.updateCartCount = loadCartCount;
             @endauth
+        </script>
+        
+        <!-- Initialize AOS -->
+        <script>
+            AOS.init({
+                duration: 800,
+                easing: 'ease-in-out',
+                once: true,
+                offset: 100
+            });
         </script>
     </body>
 </html>

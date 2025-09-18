@@ -16,26 +16,28 @@
         transition: all 0.3s ease;
         border: 1px solid #e5e7eb;
         background: white;
+        height: 100%;
     }
     .product-card:hover {
-        transform: translateY(-8px);
+        transform: translateY(-4px);
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: #d1d5db;
     }
     .btn-primary-gradient {
         background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
         transition: all 0.3s ease;
     }
     .btn-primary-gradient:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
     }
     .btn-secondary-gradient {
         background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
         transition: all 0.3s ease;
     }
     .btn-secondary-gradient:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
     }
     .accent-blue { color: #3b82f6; }
     .accent-green { color: #10b981; }
@@ -55,57 +57,15 @@
 @endpush
 
 @section('content')
-<!-- Hero Header Section -->
-<section class="relative py-20 overflow-hidden">
-    <!-- Background with gradient -->
-    <div class="absolute inset-0 hero-gradient"></div>
-    
-    <!-- Animated background elements -->
-    <div class="absolute inset-0 opacity-10">
-        <div class="absolute top-10 left-10 w-48 h-48 bg-white rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-        <div class="absolute top-20 right-20 w-48 h-48 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
-        <div class="absolute bottom-10 left-1/3 w-48 h-48 bg-green-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
-    </div>
-    
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">
-            Katalog <span class="text-blue-300">Produk</span>
-        </h1>
-        <p class="text-xl text-gray-100 max-w-2xl mx-auto leading-relaxed">
-            Temukan koleksi parfum terbaik dari brand-brand ternama dunia dengan kualitas terjamin
-        </p>
-        
-        <!-- Quick Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-            <div class="text-center">
-                <div class="text-2xl md:text-3xl font-bold text-white">{{ $products->total() }}</div>
-                <div class="text-gray-200 text-sm">Total Produk</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl md:text-3xl font-bold text-white">{{ $categories->count() }}</div>
-                <div class="text-gray-200 text-sm">Kategori</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl md:text-3xl font-bold text-white">100%</div>
-                <div class="text-gray-200 text-sm">Original</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl md:text-3xl font-bold text-white">24H</div>
-                <div class="text-gray-200 text-sm">Fast Delivery</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 -mt-10 relative z-20">
-    <!-- Modern Filter Section -->
-    <div class="filter-card p-8 rounded-3xl shadow-2xl mb-12">
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Filter & Pencarian</h2>
-            <p class="text-gray-600">Temukan produk parfum sesuai dengan preferensi Anda</p>
+<!-- Top Filter & Search Section -->
+<div class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Filter & Pencarian Produk</h2>
+            <p class="text-gray-600">Temukan parfum sesuai dengan preferensi Anda</p>
         </div>
         
-        <form method="GET" action="{{ route('products.catalog') }}">
+        <form method="GET" action="{{ route('products.catalog') }}" class="bg-gray-50 rounded-2xl p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
                 <!-- Search -->
                 <div class="lg:col-span-2">
@@ -117,7 +77,7 @@
                     </label>
                     <input type="text" id="search" name="search" value="{{ $search }}" 
                            placeholder="Nama parfum, brand, atau aroma..."
-                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300">
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white">
                 </div>
 
                 <!-- Category -->
@@ -129,7 +89,7 @@
                         Kategori
                     </label>
                     <select id="category" name="category"
-                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300">
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white">
                         <option value="">Semua Kategori</option>
                         @foreach($categories as $cat)
                             <option value="{{ $cat->name }}" {{ $category == $cat->name ? 'selected' : '' }}>
@@ -148,7 +108,7 @@
                         Urutkan
                     </label>
                     <select id="sort" name="sort"
-                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300">
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white">
                         <option value="created_at" {{ $sort == 'created_at' ? 'selected' : '' }}>Terbaru</option>
                         <option value="popular" {{ $sort == 'popular' ? 'selected' : '' }}>Terpopuler</option>
                         <option value="name" {{ $sort == 'name' ? 'selected' : '' }}>Nama A-Z</option>
@@ -162,14 +122,14 @@
                 <!-- Action Buttons -->
                 <div class="flex gap-3">
                     <button type="submit"
-                            class="flex-1 btn-primary-gradient px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105">
+                            class="flex-1 btn-primary-gradient px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
                         <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"></path>
                         </svg>
                         Filter
                     </button>
                     <a href="{{ route('products.catalog') }}"
-                       class="px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300">
+                       class="px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300 shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
@@ -178,10 +138,54 @@
             </div>
         </form>
     </div>
+</div>
 
+<!-- Hero Header Section -->
+<section class="relative py-16 overflow-hidden">
+    <!-- Background with gradient -->
+    <div class="absolute inset-0 hero-gradient"></div>
+    
+    <!-- Animated background elements -->
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-10 left-10 w-48 h-48 bg-white rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div class="absolute top-20 right-20 w-48 h-48 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+        <div class="absolute bottom-10 left-1/3 w-48 h-48 bg-green-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+    </div>
+    
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl md:text-5xl font-bold text-white mb-4">
+            Katalog <span class="text-blue-300">Produk</span>
+        </h1>
+        <p class="text-lg text-gray-100 max-w-2xl mx-auto leading-relaxed mb-8">
+            Temukan koleksi parfum terbaik dari brand-brand ternama dunia dengan kualitas terjamin
+        </p>
+        
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="text-xl md:text-2xl font-bold text-white">{{ $products->total() }}</div>
+                <div class="text-gray-200 text-sm">Total Produk</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xl md:text-2xl font-bold text-white">{{ $categories->count() }}</div>
+                <div class="text-gray-200 text-sm">Kategori</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xl md:text-2xl font-bold text-white">100%</div>
+                <div class="text-gray-200 text-sm">Original</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xl md:text-2xl font-bold text-white">24H</div>
+                <div class="text-gray-200 text-sm">Fast Delivery</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 py-8">
     @if($products->count() > 0)
         <!-- Results Info -->
-        <div class="text-center mb-12">
+        <div class="text-center mb-8">
             <div class="inline-flex items-center gap-2 bg-white rounded-full px-6 py-3 shadow-lg border border-gray-100">
                 <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -192,21 +196,21 @@
             </div>
         </div>
 
-        <!-- Products Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-16">
+        <!-- Products Grid - Enhanced for better layout -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
             @foreach($products as $product)
-                <div class="product-card rounded-3xl overflow-hidden shadow-lg flex flex-col h-full">
-                    <div class="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden flex-shrink-0">
+                <div class="product-card rounded-2xl overflow-hidden shadow-lg flex flex-col h-full bg-white border border-gray-100 hover:border-gray-200">
+                    <div class="relative h-56 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
                         <!-- Badges -->
-                        <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                        <div class="absolute top-3 left-3 z-10 flex flex-col gap-2">
                             @if($sort == 'popular' && isset($product->order_items_count) && $product->order_items_count > 0)
-                                <div class="bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs px-3 py-2 rounded-full font-bold shadow-lg">
+                                <div class="bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-md">
                                     🔥 Populer
                                 </div>
                             @endif
                             
                             @if($product->discount && $product->discount->isActive())
-                                <div class="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-3 py-2 rounded-full font-bold shadow-lg">
+                                <div class="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-md">
                                     -{{ $product->discount->percentage }}% OFF
                                 </div>
                             @endif
@@ -215,31 +219,31 @@
                         <!-- Product Image -->
                         @if($product->images && $product->images->count() > 0)
                             <img src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" 
-                                 class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                                 class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
                         @elseif($product->image)
                             <img src="{{ $product->image }}" alt="{{ $product->name }}" 
-                                 class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                                 class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
                         @else
                             <div class="flex flex-col items-center justify-center h-full text-gray-400">
-                                <svg class="w-16 h-16 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                                 </svg>
-                                <span class="text-sm font-medium">Parfum Premium</span>
+                                <span class="text-xs font-medium">Parfum Premium</span>
                             </div>
                         @endif
                         
                         <!-- Quick Actions Overlay -->
-                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
-                            <div class="flex gap-3">
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex gap-2">
                                 <button onclick="openModal({{ $product->id }})" 
-                                        class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-all duration-200">
-                                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-all duration-200">
+                                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </button>
-                                <button class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-all duration-200">
-                                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-all duration-200">
+                                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                     </svg>
                                 </button>
@@ -247,68 +251,68 @@
                         </div>
                     </div>
                     
-                    <div class="p-6 flex flex-col flex-1">
+                    <div class="p-5 flex flex-col flex-1">
                         <!-- Category Tag -->
-                        <div class="text-xs font-bold accent-blue uppercase tracking-wider mb-3 flex-shrink-0">
+                        <div class="text-xs font-bold accent-blue uppercase tracking-wider mb-2 flex-shrink-0">
                             {{ $product->category->name ?? 'Eau de Parfum' }}
                         </div>
                         
                         <!-- Product Name -->
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 line-clamp-2 min-h-[3.5rem] flex-shrink-0">{{ $product->name }}</h3>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3rem] flex-shrink-0">{{ $product->name }}</h3>
                         
                         <!-- Description -->
-                        <p class="text-gray-600 mb-4 text-sm line-clamp-2 min-h-[2.5rem] flex-shrink-0">{{ Str::limit($product->description, 80) }}</p>
+                        <p class="text-gray-600 mb-3 text-sm line-clamp-2 min-h-[2.5rem] flex-shrink-0">{{ Str::limit($product->description, 70) }}</p>
                         
                         <!-- Spacer to push content to bottom -->
                         <div class="flex-1"></div>
                         
                         <!-- Sales Info -->
                         @if($sort == 'popular' && isset($product->order_items_count))
-                            <div class="text-xs accent-green mb-3 font-semibold flex-shrink-0">
+                            <div class="text-xs accent-green mb-2 font-semibold flex-shrink-0">
                                 🔥 Terjual {{ $product->order_items_count }} kali
                             </div>
                         @endif
                         
                         <!-- Price Section -->
-                        <div class="mb-6 flex-shrink-0">
+                        <div class="mb-4 flex-shrink-0">
                             @if($product->discount && $product->discount->isActive())
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-bold">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-bold">
                                         {{ $product->discount->percentage }}% OFF
                                     </span>
                                 </div>
-                                <div class="flex items-center gap-3 mb-1">
-                                    <span class="text-2xl font-bold accent-blue">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xl font-bold accent-blue">
                                         Rp {{ number_format($product->discount->getDiscountedPrice($product->price), 0, ',', '.') }}
                                     </span>
-                                    <span class="text-gray-400 line-through text-lg">
+                                    <span class="text-gray-400 line-through text-sm">
                                         Rp {{ number_format($product->price, 0, ',', '.') }}
                                     </span>
                                 </div>
-                                <div class="text-sm accent-green font-semibold">
+                                <div class="text-xs accent-green font-semibold">
                                     💚 Hemat Rp {{ number_format($product->discount->getDiscountAmount($product->price), 0, ',', '.') }}
                                 </div>
                             @else
-                                <div class="text-2xl font-bold accent-blue">
+                                <div class="text-xl font-bold accent-blue">
                                     Rp {{ number_format($product->price, 0, ',', '.') }}
                                 </div>
                             @endif
                         </div>
                         
                         <!-- Action Buttons -->
-                        <div class="flex gap-3 flex-shrink-0">
+                        <div class="flex gap-2 flex-shrink-0">
                             <a href="{{ route('products.show-detail', $product) }}"
-                               class="flex-1 px-4 py-3 border-2 border-green-200 accent-green rounded-xl font-semibold hover:bg-green-50 transition-all duration-300 text-center text-sm">
+                               class="flex-1 px-3 py-2 border-2 border-green-200 accent-green rounded-lg font-semibold hover:bg-green-50 transition-all duration-300 text-center text-sm">
                                 Detail
                             </a>
                             @auth
                                 <button onclick="addToCart({{ $product->id }})"
-                                       class="flex-1 btn-primary-gradient px-4 py-3 text-white rounded-xl font-semibold transition-all duration-300 text-sm">
+                                       class="flex-1 btn-primary-gradient px-3 py-2 text-white rounded-lg font-semibold transition-all duration-300 text-sm">
                                     + Keranjang
                                 </button>
                             @else
                                 <a href="{{ route('login') }}"
-                                   class="flex-1 btn-primary-gradient px-4 py-3 text-white rounded-xl font-semibold transition-all duration-300 text-center text-sm">
+                                   class="flex-1 btn-primary-gradient px-3 py-2 text-white rounded-lg font-semibold transition-all duration-300 text-center text-sm">
                                     + Keranjang
                                 </a>
                             @endif
@@ -319,8 +323,8 @@
         </div>
 
         <!-- Pagination -->
-        <div class="mt-16 mb-12 flex justify-center">
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 px-8 py-4">
+        <div class="mt-8 mb-8 flex justify-center">
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 px-6 py-3">
                 {{ $products->appends(request()->query())->links() }}
             </div>
         </div>
