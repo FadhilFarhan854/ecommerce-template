@@ -164,6 +164,7 @@ Route::post('/midtrans/simulate', [CheckoutController::class, 'simulateWebhook']
 // Web routes untuk orders (monolith approach) - requires authentication
 Route::middleware('auth')->resource('orders', OrderController::class);
 Route::middleware('auth')->get('/history', [OrderController::class, 'history'])->name('orders.history');
+Route::middleware('auth')->post('/orders/{order}/continue-payment', [CheckoutController::class, 'continuePayment'])->name('orders.continue-payment');
 Route::middleware(['auth', 'admin'])->post('/orders/{order}/mark-sending', [OrderController::class, 'markAsSending'])->name('orders.mark-sending');
 Route::middleware('auth')->post('/orders/{order}/mark-finished', [OrderController::class, 'markAsFinished'])->name('orders.mark-finished');
 

@@ -14,16 +14,42 @@ class MidtransService
 		Config::$clientKey = config('midtrans.client_key');
 	}
 
-	public function createSnapToken($order)
+	public function createSnapToken($order, $generateNewOrderId = false)
 	{
 		// Load order items untuk detail produk
 		$order->load('items.product');
+		
+		// Generate new order ID jika diminta (untuk continue payment)
+		if ($generateNewOrderId || empty($order->midtrans_order_id)) {
+			$newOrderId = 'ORDER-' . time() . '-' . \Illuminate\Support\Str::random(8);
+			$order->update(['midtrans_order_id' => $newOrderId]);
+			\Log::info('Generated new Midtrans order ID', [
+				'order_id' => $order->id,
+				'old_midtrans_id' => $order->getOriginal('midtrans_order_id'),
+				'new_midtrans_id' => $newOrderId
+			]);
+		}
+		
+		// Pastikan order memiliki midtrans_order_id
+		if (empty($order->midtrans_order_id)) {
+			\Log::error('Order missing midtrans_order_id', ['order_id' => $order->id]);
+			throw new \Exception('Order missing Midtrans order ID');
+		}
 		
 		// Item details untuk Midtrans
 		$itemDetails = [];
 		$subtotal = 0;
 		
 		foreach ($order->items as $item) {
+			if (!$item->product) {
+				\Log::error('Order item missing product', [
+					'order_id' => $order->id,
+					'item_id' => $item->id,
+					'product_id' => $item->product_id
+				]);
+				throw new \Exception('Product not found for order item');
+			}
+			
 			$itemDetails[] = [
 				'id' => $item->product_id,
 				'price' => (int) $item->price, // Konversi ke integer untuk IDR
@@ -66,6 +92,20 @@ class MidtransService
 			'item_details' => $itemDetails
 		]);
 		
-		return Snap::getSnapToken($params);
+		try {
+			$snapToken = Snap::getSnapToken($params);
+			\Log::info('Snap token generated successfully', [
+				'order_id' => $order->midtrans_order_id,
+				'token_length' => strlen($snapToken)
+			]);
+			return $snapToken;
+		} catch (\Exception $e) {
+			\Log::error('Failed to generate snap token', [
+				'order_id' => $order->midtrans_order_id,
+				'error' => $e->getMessage(),
+				'params' => $params
+			]);
+			throw $e;
+		}
 	}
 }

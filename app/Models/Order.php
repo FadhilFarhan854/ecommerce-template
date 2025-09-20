@@ -76,6 +76,14 @@ class Order extends Model
     }
     
     /**
+     * Check if payment can be continued
+     */
+    public function canContinuePayment()
+    {
+        return $this->status === self::STATUS_UNPAID;
+    }
+    
+    /**
      * Check if order can be finished by user
      */
     public function canBeFinished()

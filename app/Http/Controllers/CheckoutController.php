@@ -377,6 +377,186 @@ class CheckoutController extends Controller
     }
 
     /**
+     * Continue payment for pending orders
+     */
+    public function continuePayment(Request $request, $orderId)
+    {
+        try {
+            \Log::info('Continue payment requested', ['order_id' => $orderId]);
+            
+            $order = Order::where('id', $orderId)
+                ->where('user_id', Auth::id())
+                ->first();
+                
+            if (!$order) {
+                \Log::warning('Order not found for continue payment', ['order_id' => $orderId, 'user_id' => Auth::id()]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order not found or access denied'
+                ], 404);
+            }
+            
+            \Log::info('Order found for continue payment', [
+                'order_id' => $order->id,
+                'status' => $order->status,
+                'midtrans_order_id' => $order->midtrans_order_id
+            ]);
+            
+            // Cek apakah order masih bisa dibayar
+            if (!in_array($order->status, [Order::STATUS_UNPAID])) {
+                \Log::warning('Order cannot continue payment due to status', [
+                    'order_id' => $order->id,
+                    'status' => $order->status
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment cannot be continued for this order. Current status: ' . $order->status_label
+                ], 422);
+            }
+            
+            // Cek status di Midtrans dulu (skip jika ada error)
+            try {
+                $midtransStatus = $this->checkMidtransStatus($order->midtrans_order_id);
+                
+                if ($midtransStatus && isset($midtransStatus['transaction_status'])) {
+                    $transactionStatus = $midtransStatus['transaction_status'];
+                    
+                    \Log::info('Midtrans status check result', [
+                        'order_id' => $order->id,
+                        'midtrans_status' => $transactionStatus
+                    ]);
+                    
+                    // Jika expired, cancel order
+                    if (in_array($transactionStatus, ['expire', 'cancel', 'deny', 'failure'])) {
+                        $order->update([
+                            'payment_status' => Order::PAYMENT_STATUS_FAILED,
+                            'status' => Order::STATUS_CANCELLED
+                        ]);
+                        
+                        // Kembalikan stok
+                        foreach ($order->items as $item) {
+                            $item->product->increment('stock', $item->quantity);
+                        }
+                        
+                        \Log::info('Order auto-cancelled due to expired Midtrans transaction', [
+                            'order_id' => $order->id,
+                            'midtrans_order_id' => $order->midtrans_order_id,
+                            'midtrans_status' => $transactionStatus
+                        ]);
+                        
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'This payment has expired. Please create a new order.'
+                        ], 422);
+                    }
+                    
+                    // Jika sudah paid, update status
+                    if (in_array($transactionStatus, ['settlement', 'capture'])) {
+                        $order->update([
+                            'payment_status' => Order::PAYMENT_STATUS_PAID,
+                            'status' => Order::STATUS_PAID
+                        ]);
+                        
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'This order has already been paid.'
+                        ], 422);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to check Midtrans status, continuing with payment generation', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+                // Continue dengan generate token meski check status gagal
+            }
+            
+            // Generate Snap Token baru dengan order ID baru untuk continue payment
+            \Log::info('Generating new snap token with new order ID', ['order_id' => $order->id]);
+            $midtransService = new \App\Services\MidtransService();
+            $snapToken = $midtransService->createSnapToken($order, true); // true = generate new order ID
+            
+            \Log::info('Snap token generated successfully', [
+                'order_id' => $order->id,
+                'snap_token_length' => strlen($snapToken)
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment interface loaded successfully',
+                'snap_token' => $snapToken,
+                'order' => [
+                    'id' => $order->id,
+                    'total_price' => $order->total_price,
+                    'status' => $order->status,
+                    'payment_status' => $order->payment_status
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Continue payment error', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load payment interface: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Check payment status from Midtrans API
+     */
+    private function checkMidtransStatus($orderId)
+    {
+        try {
+            $serverKey = config('midtrans.server_key');
+            $baseUrl = config('midtrans.base_url');
+            
+            $url = "{$baseUrl}/v2/{$orderId}/status";
+            
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'Accept: application/json',
+                    'Content-Type: application/json',
+                    'Authorization: Basic ' . base64_encode($serverKey . ':')
+                ],
+                CURLOPT_TIMEOUT => 30,
+            ]);
+            
+            $response = curl_exec($curl);
+            $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            curl_close($curl);
+            
+            if ($httpCode === 200) {
+                return json_decode($response, true);
+            }
+            
+            \Log::warning('Failed to check Midtrans status', [
+                'order_id' => $orderId,
+                'http_code' => $httpCode,
+                'response' => $response
+            ]);
+            
+            return null;
+            
+        } catch (\Exception $e) {
+            \Log::error('Error checking Midtrans status', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return null;
+        }
+    }
+
+    /**
      * Cek status pembayaran secara manual (optional)
      */
     public function checkPaymentStatus($orderId)

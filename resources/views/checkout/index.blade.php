@@ -496,12 +496,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                     onSuccess: function(result) {
                                         console.log('Payment success:', result);
                                         alert('Pembayaran berhasil!');
-                                        window.location.href = '/orders';
+                                        window.location.href = '/history';
                                     },
                                     onPending: function(result) {
                                         console.log('Payment pending:', result);
                                         alert('Pembayaran pending. Silakan selesaikan pembayaran Anda.');
-                                        window.location.href = '/orders';
+                                        window.location.href = '/history';
                                     },
                                     onError: function(result) {
                                         console.log('Payment error:', result);
@@ -510,7 +510,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     onClose: function() {
                                         console.log('Payment popup closed');
                                         alert('Anda menutup popup pembayaran. Anda dapat melanjutkan pembayaran melalui halaman pesanan.');
-                                        window.location.href = '/orders';
+                                        window.location.href = '/history';
                                     }
                                 });
                             } else {
@@ -525,7 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         console.log('No snap token received');
                         alert('Checkout berhasil! Pesanan Anda sedang diproses.');
-                        window.location.href = data.redirect_url || '/orders';
+                        window.location.href = data.redirect_url || '/history';
                     }
                 } else {
                     let errorMessage = 'Error: ' + data.message;
