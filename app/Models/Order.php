@@ -105,11 +105,11 @@ class Order extends Model
     public function getStatusLabelAttribute()
     {
         $labels = [
-            self::STATUS_UNPAID => 'Belum Dibayar',
-            self::STATUS_PAID => 'Sudah Dibayar',
-            self::STATUS_SENDING => 'Sedang Dikirim',
-            self::STATUS_FINISHED => 'Selesai',
-            self::STATUS_CANCELLED => 'Dibatalkan',
+            self::STATUS_UNPAID => 'Unpaid',
+            self::STATUS_PAID => 'Paid',
+            self::STATUS_SENDING => 'Sending',
+            self::STATUS_FINISHED => 'Finished',
+            self::STATUS_CANCELLED => 'Cancelled',
         ];
         
         return $labels[$this->status] ?? $this->status;
@@ -121,9 +121,9 @@ class Order extends Model
     public function getPaymentStatusLabelAttribute()
     {
         $labels = [
-            self::PAYMENT_STATUS_UNPAID => 'Belum Dibayar',
-            self::PAYMENT_STATUS_PAID => 'Sudah Dibayar',
-            self::PAYMENT_STATUS_FAILED => 'Gagal',
+            self::PAYMENT_STATUS_UNPAID => 'Unpaid',
+            self::PAYMENT_STATUS_PAID => 'Paid',
+            self::PAYMENT_STATUS_FAILED => 'Failed',
         ];
         
         return $labels[$this->payment_status] ?? $this->payment_status;

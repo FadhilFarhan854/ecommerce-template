@@ -70,11 +70,11 @@
                                             @endif">
                                             @php
                                                 $statusLabels = [
-                                                    'unpaid' => 'Belum Dibayar',
-                                                    'paid' => 'Sudah Dibayar',
-                                                    'sending' => 'Sedang Dikirim',
-                                                    'finished' => 'Selesai',
-                                                    'cancelled' => 'Dibatalkan'
+                                                    'unpaid' => 'Unpaid',
+                                                    'paid' => 'Paid',
+                                                    'sending' => 'Sending',
+                                                    'finished' => 'Finished',
+                                                    'cancelled' => 'Cancelled'
                                                 ];
                                                 $statusText = $statusLabels[$order['status'] ?? ''] ?? ucfirst($order['status'] ?? 'Unknown');
                                             @endphp
@@ -103,9 +103,9 @@
                                                     <form action="{{ route('orders.mark-sending', $order['id']) }}" method="POST" class="inline">
                                                         @csrf
                                                         <button type="submit" 
-                                                                onclick="return confirm('Kirim pesanan ini?')"
+                                                                onclick="return confirm('Send this order?')"
                                                                 class="px-3 py-1 rounded-md text-sm bg-purple-100 text-purple-700 hover:bg-purple-200">
-                                                            Kirim
+                                                            Send
                                                         </button>
                                                     </form>
                                                 @endif

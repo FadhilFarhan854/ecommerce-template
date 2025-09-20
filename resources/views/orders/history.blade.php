@@ -68,11 +68,11 @@
                                             @endif">
                                             @php
                                                 $statusLabels = [
-                                                    'unpaid' => 'Belum Dibayar',
-                                                    'paid' => 'Sudah Dibayar',
-                                                    'sending' => 'Sedang Dikirim',
-                                                    'finished' => 'Selesai',
-                                                    'cancelled' => 'Dibatalkan'
+                                                    'unpaid' => 'Unpaid',
+                                                    'paid' => 'Paid',
+                                                    'sending' => 'Sending',
+                                                    'finished' => 'Finished',
+                                                    'cancelled' => 'Cancelled'
                                                 ];
                                                 $statusText = $statusLabels[$order['status'] ?? ''] ?? ucfirst($order['status'] ?? 'Unknown');
                                             @endphp
@@ -100,15 +100,15 @@
                                                 @if(($order['status'] ?? '') === 'unpaid')
                                                     <button onclick="retryPayment('{{ $order['id'] }}')"
                                                         class="px-3 py-1 rounded-md text-sm bg-yellow-100 text-yellow-700 hover:bg-yellow-200">
-                                                        Bayar Ulang
+                                                        Retry Payment
                                                     </button>
                                                 @elseif(($order['status'] ?? '') === 'sending')
                                                     <form action="{{ route('orders.mark-finished', $order['id']) }}" method="POST" class="inline">
                                                         @csrf
                                                         <button type="submit" 
-                                                                onclick="return confirm('Apakah pesanan sudah diterima?')"
+                                                                onclick="return confirm('Have you received this order?')"
                                                                 class="px-3 py-1 rounded-md text-sm bg-green-100 text-green-700 hover:bg-green-200">
-                                                            Selesaikan
+                                                            Mark Finished
                                                         </button>
                                                     </form>
                                                 @endif
@@ -186,7 +186,10 @@
             </div>
             
             {{-- Modal Footer --}}
-            <div class="mt-6 flex justify-end">
+            <div class="mt-6 flex justify-end space-x-3">
+                <div id="modalActions" class="flex space-x-3">
+                    <!-- Dynamic action buttons will be added here -->
+                </div>
                 <button onclick="closeOrderModal()" 
                     class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md transition duration-200">
                     Close
@@ -230,10 +233,16 @@ function openOrderModal(order) {
     statusElement.className = 'mt-1 inline-block px-2 py-1 rounded-full text-xs';
     
     switch(status.toLowerCase()) {
-        case 'completed':
+        case 'finished':
             statusElement.className += ' bg-green-100 text-green-800';
             break;
-        case 'pending':
+        case 'paid':
+            statusElement.className += ' bg-blue-100 text-blue-800';
+            break;
+        case 'sending':
+            statusElement.className += ' bg-purple-100 text-purple-800';
+            break;
+        case 'unpaid':
             statusElement.className += ' bg-yellow-100 text-yellow-800';
             break;
         case 'cancelled':
@@ -243,6 +252,9 @@ function openOrderModal(order) {
             statusElement.className += ' bg-gray-100 text-gray-800';
     }
     statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    
+    // Setup action buttons based on status
+    setupModalActions(order);
     
     // Display products
     const productsContainer = document.getElementById('modalProducts');
@@ -281,6 +293,57 @@ function openOrderModal(order) {
     } else {
         productsContainer.innerHTML = '<p class="text-gray-500 text-sm">No product information available</p>';
     }
+}
+
+function setupModalActions(order) {
+    const actionsContainer = document.getElementById('modalActions');
+    actionsContainer.innerHTML = ''; // Clear existing actions
+    
+    const status = order.status?.toLowerCase();
+    const orderId = order.id;
+    
+    if (status === 'unpaid') {
+        // Add retry payment button
+        const retryButton = document.createElement('button');
+        retryButton.onclick = () => retryPayment(orderId);
+        retryButton.className = 'px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md transition duration-200';
+        retryButton.textContent = 'Retry Payment';
+        actionsContainer.appendChild(retryButton);
+    } else if (status === 'sending') {
+        // Add finish order button
+        const finishButton = document.createElement('button');
+        finishButton.onclick = () => finishOrder(orderId);
+        finishButton.className = 'px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md transition duration-200';
+        finishButton.textContent = 'Mark as Finished';
+        actionsContainer.appendChild(finishButton);
+    }
+}
+
+function finishOrder(orderId) {
+    if (!confirm('Are you sure you have received this order?')) {
+        return;
+    }
+    
+    fetch(`/orders/${orderId}/mark-finished`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Order marked as finished successfully!');
+            location.reload();
+        } else {
+            alert('Failed to mark order as finished: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
 }
 
 function closeOrderModal() {
