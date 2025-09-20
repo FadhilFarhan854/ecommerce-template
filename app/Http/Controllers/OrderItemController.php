@@ -270,7 +270,7 @@ class OrderItemController extends Controller
         }
 
         // Check if order is still editable
-        if (in_array($orderItem->order->status, ['shipped', 'delivered', 'cancelled'])) {
+        if (in_array($orderItem->order->status, [Order::STATUS_SENDING, Order::STATUS_FINISHED, Order::STATUS_CANCELLED])) {
             $message = 'Cannot edit order item. Order status is: ' . $orderItem->order->status;
             
             if ($request->wantsJson() || $request->is('api/*')) {
@@ -366,7 +366,7 @@ class OrderItemController extends Controller
         DB::beginTransaction();
 
         // Check if order is still editable
-        if (in_array($orderItem->order->status, ['shipped', 'delivered', 'cancelled'])) {
+        if (in_array($orderItem->order->status, [Order::STATUS_SENDING, Order::STATUS_FINISHED, Order::STATUS_CANCELLED])) {
             throw new \Exception('Cannot update order item. Order status is: ' . $orderItem->order->status);
         }
 
@@ -437,7 +437,7 @@ class OrderItemController extends Controller
         }
 
         // Check if order is still editable
-        if (in_array($orderItem->order->status, ['shipped', 'delivered', 'cancelled'])) {
+        if (in_array($orderItem->order->status, [Order::STATUS_SENDING, Order::STATUS_FINISHED, Order::STATUS_CANCELLED])) {
             $message = 'Cannot delete order item. Order status is: ' . $orderItem->order->status;
             
             if ($request->wantsJson() || $request->is('api/*')) {

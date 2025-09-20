@@ -38,15 +38,14 @@
             </div>
             <div class="text-right">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                    @if($order->status === 'pending') bg-yellow-100 text-yellow-800
-                    @elseif($order->status === 'confirmed') bg-blue-100 text-blue-800
-                    @elseif($order->status === 'processing') bg-purple-100 text-purple-800
-                    @elseif($order->status === 'shipped') bg-indigo-100 text-indigo-800
-                    @elseif($order->status === 'delivered') bg-green-100 text-green-800
+                    @if($order->status === 'unpaid') bg-yellow-100 text-yellow-800
+                    @elseif($order->status === 'paid') bg-blue-100 text-blue-800
+                    @elseif($order->status === 'sending') bg-purple-100 text-purple-800
+                    @elseif($order->status === 'finished') bg-green-100 text-green-800
                     @elseif($order->status === 'cancelled') bg-red-100 text-red-800
                     @else bg-gray-100 text-gray-800
                     @endif">
-                    {{ ucfirst($order->status) }}
+                    {{ $order->status_label }}
                 </span>
             </div>
         </div>
@@ -181,19 +180,19 @@
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600">Status Pembayaran</span>
                             <span class="font-medium
-                                @if($order->payment_status === 'pending') text-yellow-600
+                                @if($order->payment_status === 'unpaid') text-yellow-600
                                 @elseif($order->payment_status === 'paid') text-green-600
                                 @elseif($order->payment_status === 'failed') text-red-600
                                 @else text-gray-600
                                 @endif">
-                                @if($order->payment_status === 'pending')
+                                @if($order->payment_status === 'unpaid')
                                     <i class="fas fa-clock mr-1"></i>
                                 @elseif($order->payment_status === 'paid')
                                     <i class="fas fa-check-circle mr-1"></i>
                                 @elseif($order->payment_status === 'failed')
                                     <i class="fas fa-times-circle mr-1"></i>
                                 @endif
-                                {{ ucfirst($order->payment_status) }}
+                                {{ $order->payment_status_label }}
                             </span>
                         </div>
                     </div>
@@ -201,16 +200,25 @@
 
                 <!-- Actions -->
                 <div class="space-y-3 sticky top-4">
-                    <a href="{{ route('orders.index') }}" 
+                    <a href="{{ route('orders.history') }}" 
                        class="w-full inline-flex items-center justify-center px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition shadow-sm">
                         <i class="fas fa-list mr-2"></i> Lihat Semua Pesanan
                     </a>
                     
-                    @if($order->status === 'pending')
-                    <button onclick="cancelOrder({{ $order->id }})"
-                            class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-sm flex items-center justify-center">
-                        <i class="fas fa-times-circle mr-2"></i> Batalkan Pesanan
-                    </button>
+                    @if($order->canRetryPayment())
+                        <button onclick="retryPayment('{{ $order->id }}')"
+                                class="w-full px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition shadow-sm flex items-center justify-center">
+                            <i class="fas fa-credit-card mr-2"></i> Bayar Ulang
+                        </button>
+                    @elseif($order->canBeFinished())
+                        <form action="{{ route('orders.mark-finished', $order) }}" method="POST">
+                            @csrf
+                            <button type="submit" 
+                                    onclick="return confirm('Apakah pesanan sudah diterima dengan baik?')"
+                                    class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow-sm flex items-center justify-center">
+                                <i class="fas fa-check-circle mr-2"></i> Selesaikan Pesanan
+                            </button>
+                        </form>
                     @endif
                     
                     <a href="{{ route('products.catalog') }}" 
@@ -273,6 +281,70 @@ function cancelOrder(orderId) {
         console.error('Error:', error);
         alert('Terjadi kesalahan');
     });
+}
+
+// Retry payment function
+async function retryPayment(orderId) {
+    try {
+        const response = await fetch(`/orders/${orderId}/retry-payment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.snap_token) {
+            // Open Midtrans payment popup
+            if (typeof window.snap !== 'undefined') {
+                window.snap.pay(data.snap_token, {
+                    onSuccess: function(result) {
+                        console.log('Payment success:', result);
+                        alert('Pembayaran berhasil!');
+                        location.reload();
+                    },
+                    onPending: function(result) {
+                        console.log('Payment pending:', result);
+                        alert('Pembayaran pending. Silakan selesaikan pembayaran Anda.');
+                        location.reload();
+                    },
+                    onError: function(result) {
+                        console.log('Payment error:', result);
+                        alert('Pembayaran gagal. Silakan coba lagi.');
+                    },
+                    onClose: function() {
+                        console.log('Payment popup closed');
+                        alert('Anda menutup popup pembayaran. Anda dapat mencoba lagi kapan saja.');
+                    }
+                });
+            } else {
+                console.error('Snap.js not loaded');
+                alert('Payment gateway sedang loading. Silakan coba lagi dalam beberapa detik.');
+                
+                // Load Snap.js dynamically
+                const script = document.createElement('script');
+                script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+                script.setAttribute('data-client-key', '{{ config("midtrans.client_key") }}');
+                script.onload = function() {
+                    console.log('Snap.js loaded, retrying payment...');
+                    retryPayment(orderId);
+                };
+                document.head.appendChild(script);
+            }
+        } else {
+            alert(data.message || 'Gagal membuat token pembayaran');
+        }
+    } catch (error) {
+        console.error('Retry payment error:', error);
+        alert('Terjadi kesalahan. Silakan coba lagi.');
+    }
+}
+</script>
+
+{{-- Load Midtrans Snap.js --}}
+<script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
 }
 
 // Auto hide success alert

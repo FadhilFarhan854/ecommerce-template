@@ -21,4 +21,17 @@ class Review extends Model
     {
         return $this->belongsTo(Product::class);
     }
+    
+    /**
+     * Check if user can review a product based on finished orders
+     */
+    public static function canUserReviewProduct($userId, $productId)
+    {
+        return Order::where('user_id', $userId)
+            ->where('status', Order::STATUS_FINISHED)
+            ->whereHas('items', function($query) use ($productId) {
+                $query->where('product_id', $productId);
+            })
+            ->exists();
+    }
 }

@@ -16,6 +16,20 @@ class ReviewController extends Controller
             'rating' => 'required|integer|min:1|max:5',
         ]);
 
+        // Check if user can review this product (must have finished order)
+        if (!Review::canUserReviewProduct(Auth::id(), $request->product_id)) {
+            return redirect()->back()->with('error', 'Anda hanya dapat memberikan review untuk produk dari pesanan yang sudah selesai.');
+        }
+
+        // Check if user already reviewed this product
+        $existingReview = Review::where('user_id', Auth::id())
+            ->where('product_id', $request->product_id)
+            ->first();
+            
+        if ($existingReview) {
+            return redirect()->back()->with('error', 'Anda sudah memberikan review untuk produk ini.');
+        }
+
         Review::create([
             'user_id' => Auth::id(),
             'product_id' => $request->product_id,

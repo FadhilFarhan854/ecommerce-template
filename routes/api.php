@@ -69,4 +69,11 @@ Route::post('/midtrans/callback', [App\Http\Controllers\CheckoutController::clas
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/midtrans/check/{orderId}', [App\Http\Controllers\CheckoutController::class, 'checkPaymentStatus']);
     Route::post('/midtrans/simulate', [App\Http\Controllers\CheckoutController::class, 'simulateWebhook']);
+    Route::post('/orders/{order}/retry-payment', [App\Http\Controllers\CheckoutController::class, 'retryPayment']);
+});
+
+// Order management routes (auth required)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('admin')->post('/orders/{order}/mark-sending', [App\Http\Controllers\OrderController::class, 'markAsSending']);
+    Route::post('/orders/{order}/mark-finished', [App\Http\Controllers\OrderController::class, 'markAsFinished']);
 });

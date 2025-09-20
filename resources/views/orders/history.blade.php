@@ -59,12 +59,24 @@
                                     <td class="px-4 py-2 text-gray-600">{{ $order['address'] ?? 'N/A' }}</td>
                                     <td class="px-4 py-2">
                                         <span class="px-2 py-1 rounded-full text-xs
-                                            @if(($order['status'] ?? '') === 'completed') bg-green-100 text-green-800
-                                            @elseif(($order['status'] ?? '') === 'pending') bg-yellow-100 text-yellow-800
+                                            @if(($order['status'] ?? '') === 'finished') bg-green-100 text-green-800
+                                            @elseif(($order['status'] ?? '') === 'paid') bg-blue-100 text-blue-800
+                                            @elseif(($order['status'] ?? '') === 'sending') bg-purple-100 text-purple-800
+                                            @elseif(($order['status'] ?? '') === 'unpaid') bg-yellow-100 text-yellow-800
                                             @elseif(($order['status'] ?? '') === 'cancelled') bg-red-100 text-red-800
                                             @else bg-gray-100 text-gray-800
                                             @endif">
-                                            {{ ucfirst($order['status'] ?? 'Unknown') }}
+                                            @php
+                                                $statusLabels = [
+                                                    'unpaid' => 'Belum Dibayar',
+                                                    'paid' => 'Sudah Dibayar',
+                                                    'sending' => 'Sedang Dikirim',
+                                                    'finished' => 'Selesai',
+                                                    'cancelled' => 'Dibatalkan'
+                                                ];
+                                                $statusText = $statusLabels[$order['status'] ?? ''] ?? ucfirst($order['status'] ?? 'Unknown');
+                                            @endphp
+                                            {{ $statusText }}
                                         </span>
                                     </td>
                                     <td class="px-4 py-2 text-gray-600">
@@ -81,23 +93,25 @@
                                         <div class="flex justify-center space-x-2">
                                             <a href="{{ route('orders.show', $order['id']) }}" 
                                                class="px-3 py-1 rounded-md text-sm bg-blue-100 text-blue-700 hover:bg-blue-200">
-                                                Show
+                                                Detail
                                             </a>
                                             @if(isset($order['id']))
-                                                {{-- <a href="{{ route('orders.edit', $order['id']) }}" 
-                                                   class="px-3 py-1 rounded-md text-sm bg-yellow-100 text-yellow-700 hover:bg-yellow-200">
-                                                    Edit
-                                                </a> --}}
-                                                <form action="{{ route('orders.destroy', $order['id']) }}" method="POST"
-                                                      onsubmit="return confirm('Are you sure you want to delete this order?')" 
-                                                      class="inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    {{-- <button type="submit"
-                                                        class="px-3 py-1 rounded-md text-sm bg-red-100 text-red-700 hover:bg-red-200">
-                                                        Delete
-                                                    </button> --}}
-                                                </form>
+                                                {{-- Actions based on order status --}}
+                                                @if(($order['status'] ?? '') === 'unpaid')
+                                                    <button onclick="retryPayment('{{ $order['id'] }}')"
+                                                        class="px-3 py-1 rounded-md text-sm bg-yellow-100 text-yellow-700 hover:bg-yellow-200">
+                                                        Bayar Ulang
+                                                    </button>
+                                                @elseif(($order['status'] ?? '') === 'sending')
+                                                    <form action="{{ route('orders.mark-finished', $order['id']) }}" method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit" 
+                                                                onclick="return confirm('Apakah pesanan sudah diterima?')"
+                                                                class="px-3 py-1 rounded-md text-sm bg-green-100 text-green-700 hover:bg-green-200">
+                                                            Selesaikan
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             @endif
                                         </div>
                                     </td>
@@ -273,6 +287,65 @@ function closeOrderModal() {
     document.getElementById('orderModal').classList.add('hidden');
 }
 
+// Retry payment function
+async function retryPayment(orderId) {
+    try {
+        const response = await fetch(`/orders/${orderId}/retry-payment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.snap_token) {
+            // Open Midtrans payment popup
+            if (typeof window.snap !== 'undefined') {
+                window.snap.pay(data.snap_token, {
+                    onSuccess: function(result) {
+                        console.log('Payment success:', result);
+                        alert('Pembayaran berhasil!');
+                        location.reload();
+                    },
+                    onPending: function(result) {
+                        console.log('Payment pending:', result);
+                        alert('Pembayaran pending. Silakan selesaikan pembayaran Anda.');
+                        location.reload();
+                    },
+                    onError: function(result) {
+                        console.log('Payment error:', result);
+                        alert('Pembayaran gagal. Silakan coba lagi.');
+                    },
+                    onClose: function() {
+                        console.log('Payment popup closed');
+                        alert('Anda menutup popup pembayaran. Anda dapat mencoba lagi kapan saja.');
+                    }
+                });
+            } else {
+                console.error('Snap.js not loaded');
+                alert('Payment gateway sedang loading. Silakan coba lagi dalam beberapa detik.');
+                
+                // Load Snap.js dynamically
+                const script = document.createElement('script');
+                script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+                script.setAttribute('data-client-key', '{{ config("midtrans.client_key") }}');
+                script.onload = function() {
+                    console.log('Snap.js loaded, retrying payment...');
+                    retryPayment(orderId);
+                };
+                document.head.appendChild(script);
+            }
+        } else {
+            alert(data.message || 'Gagal membuat token pembayaran');
+        }
+    } catch (error) {
+        console.error('Retry payment error:', error);
+        alert('Terjadi kesalahan. Silakan coba lagi.');
+    }
+}
+
 // Close modal when clicking outside
 document.getElementById('orderModal').addEventListener('click', function(e) {
     if (e.target === this) {
@@ -287,5 +360,8 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
+
+{{-- Load Midtrans Snap.js --}}
+<script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
 
 @endsection

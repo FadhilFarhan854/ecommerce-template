@@ -237,11 +237,11 @@ class OrderController extends Controller
         // Create order
         $order = Order::create([
             'user_id' => Auth::id(),
-            'status' => 'pending',
+            'status' => Order::STATUS_UNPAID,
             'total_price' => $totalPrice,
             'shipping_address' => $request->shipping_address,
             'payment_method' => $request->payment_method,
-            'payment_status' => 'pending',
+            'payment_status' => Order::PAYMENT_STATUS_UNPAID,
         ]);
 
         // Create order items
@@ -565,5 +565,103 @@ class OrderController extends Controller
         });
 
         return view('orders.history', compact('orders', 'orderData'));
+    }
+    
+    /**
+     * Mark order as sending (Admin only)
+     */
+    public function markAsSending(Request $request, Order $order)
+    {
+        if (!$order->canMarkAsSending()) {
+            $message = 'Order cannot be marked as sending. Current status: ' . $order->status_label;
+            
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message
+                ], 422);
+            }
+            
+            return redirect()->back()->with('error', $message);
+        }
+        
+        try {
+            $order->update(['status' => Order::STATUS_SENDING]);
+            
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order marked as sending successfully',
+                    'order' => $order->fresh()
+                ]);
+            }
+            
+            return redirect()->back()->with('success', 'Order marked as sending successfully');
+            
+        } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update order status'
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Failed to update order status');
+        }
+    }
+    
+    /**
+     * Mark order as finished (User)
+     */
+    public function markAsFinished(Request $request, Order $order)
+    {
+        // Verify order belongs to authenticated user
+        if ($order->user_id !== Auth::id()) {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied'
+                ], 403);
+            }
+            
+            return redirect()->back()->with('error', 'Access denied');
+        }
+        
+        if (!$order->canBeFinished()) {
+            $message = 'Order cannot be finished. Current status: ' . $order->status_label;
+            
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message
+                ], 422);
+            }
+            
+            return redirect()->back()->with('error', $message);
+        }
+        
+        try {
+            $order->update(['status' => Order::STATUS_FINISHED]);
+            
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order marked as finished successfully',
+                    'order' => $order->fresh()
+                ]);
+            }
+            
+            return redirect()->back()->with('success', 'Order finished successfully! You can now review the products.');
+            
+        } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update order status'
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Failed to update order status');
+        }
     }
 }

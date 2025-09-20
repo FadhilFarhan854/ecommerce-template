@@ -175,12 +175,12 @@ class CheckoutController extends Controller
             // Buat order dengan UUID
             $order = Order::create([
                 'user_id' => Auth::id(),
-                'status' => 'pending',
+                'status' => Order::STATUS_UNPAID,
                 'total_price' => $grandTotal, // Total keseluruhan (subtotal + ongkir)
                 'total_weight' => $totalWeight,
                 'shipping_address' => $shippingAddress,
                 'payment_method' => 'midtrans',
-                'payment_status' => 'pending',
+                'payment_status' => Order::PAYMENT_STATUS_UNPAID,
             ]);
 
             // Buat order items dan kurangi stok
@@ -287,20 +287,20 @@ class CheckoutController extends Controller
                     // Untuk credit card, perlu cek fraud_status
                     if ($fraudStatus == 'accept') {
                         $order->update([
-                            'payment_status' => 'paid',
-                            'status' => 'processing'
+                            'payment_status' => Order::PAYMENT_STATUS_PAID,
+                            'status' => Order::STATUS_PAID
                         ]);
                         \Log::info('Order payment captured and accepted', ['order_id' => $orderId]);
                     } else if ($fraudStatus == 'challenge') {
                         $order->update([
-                            'payment_status' => 'pending',
-                            'status' => 'pending'
+                            'payment_status' => Order::PAYMENT_STATUS_UNPAID,
+                            'status' => Order::STATUS_UNPAID
                         ]);
                         \Log::info('Order payment captured but challenged', ['order_id' => $orderId]);
                     } else {
                         $order->update([
-                            'payment_status' => 'failed',
-                            'status' => 'cancelled'
+                            'payment_status' => Order::PAYMENT_STATUS_FAILED,
+                            'status' => Order::STATUS_UNPAID
                         ]);
                         \Log::info('Order payment captured but denied', ['order_id' => $orderId]);
                     }
@@ -309,8 +309,8 @@ class CheckoutController extends Controller
                 case 'settlement':
                     // Pembayaran berhasil (untuk non-credit card)
                     $order->update([
-                        'payment_status' => 'paid',
-                        'status' => 'processing'
+                        'payment_status' => Order::PAYMENT_STATUS_PAID,
+                        'status' => Order::STATUS_PAID
                     ]);
                     \Log::info('Order payment settled', ['order_id' => $orderId]);
                     break;
@@ -318,7 +318,7 @@ class CheckoutController extends Controller
                 case 'pending':
                     // Pembayaran pending (menunggu)
                     $order->update([
-                        'payment_status' => 'pending'
+                        'payment_status' => Order::PAYMENT_STATUS_UNPAID
                     ]);
                     \Log::info('Order payment pending', ['order_id' => $orderId]);
                     break;
@@ -329,8 +329,8 @@ class CheckoutController extends Controller
                 case 'failure':
                     // Pembayaran gagal atau dibatalkan
                     $order->update([
-                        'payment_status' => 'failed',
-                        'status' => 'cancelled'
+                        'payment_status' => Order::PAYMENT_STATUS_FAILED,
+                        'status' => Order::STATUS_UNPAID
                     ]);
                     
                     // Kembalikan stok produk jika pembayaran gagal
@@ -469,5 +469,59 @@ class CheckoutController extends Controller
                 'status' => $order->fresh()->status
             ]
         ]);
+    }
+    
+    /**
+     * Retry payment for unpaid order
+     */
+    public function retryPayment(Request $request, $orderId)
+    {
+        try {
+            $order = Order::where('id', $orderId)
+                ->where('user_id', Auth::id())
+                ->first();
+                
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order not found or access denied'
+                ], 404);
+            }
+            
+            if (!$order->canRetryPayment()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment cannot be retried for this order. Current status: ' . $order->status_label
+                ], 422);
+            }
+            
+            // Generate new Snap Token
+            $midtransService = new \App\Services\MidtransService();
+            $snapToken = $midtransService->createSnapToken($order);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment retry token generated successfully',
+                'snap_token' => $snapToken,
+                'order' => [
+                    'id' => $order->id,
+                    'total_price' => $order->total_price,
+                    'status' => $order->status,
+                    'payment_status' => $order->payment_status
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Retry payment error', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate payment token. Please try again.'
+            ], 500);
+        }
     }
 }
