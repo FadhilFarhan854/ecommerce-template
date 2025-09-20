@@ -91,10 +91,10 @@
                                     </td>
                                     <td class="px-4 py-2">
                                         <div class="flex justify-center space-x-2">
-                                            <a href="{{ route('orders.show', $order['id']) }}" 
-                                               class="px-3 py-1 rounded-md text-sm bg-blue-100 text-blue-700 hover:bg-blue-200">
-                                                Detail
-                                            </a>
+                                            <button onclick="openOrderModal({{ json_encode($order) }})" 
+                                                    class="px-3 py-1 rounded-md text-sm bg-blue-100 text-blue-700 hover:bg-blue-200">
+                                                View Details
+                                            </button>
                                             @if(isset($order['id']))
                                                 {{-- Actions based on order status --}}
                                                 @if(($order['status'] ?? '') === 'unpaid')
