@@ -300,9 +300,9 @@ class CheckoutController extends Controller
                     } else {
                         $order->update([
                             'payment_status' => Order::PAYMENT_STATUS_FAILED,
-                            'status' => Order::STATUS_UNPAID
+                            'status' => Order::STATUS_CANCELLED
                         ]);
-                        \Log::info('Order payment captured but denied', ['order_id' => $orderId]);
+                        \Log::info('Order payment captured but denied, status changed to cancelled', ['order_id' => $orderId]);
                     }
                     break;
 
@@ -327,10 +327,10 @@ class CheckoutController extends Controller
                 case 'cancel':
                 case 'expire':
                 case 'failure':
-                    // Pembayaran gagal atau dibatalkan
+                    // Pembayaran gagal atau dibatalkan - langsung ubah status menjadi cancelled
                     $order->update([
                         'payment_status' => Order::PAYMENT_STATUS_FAILED,
-                        'status' => Order::STATUS_UNPAID
+                        'status' => Order::STATUS_CANCELLED
                     ]);
                     
                     // Kembalikan stok produk jika pembayaran gagal
@@ -338,7 +338,7 @@ class CheckoutController extends Controller
                         $item->product->increment('stock', $item->quantity);
                     }
                     
-                    \Log::info('Order payment failed/cancelled, stock restored', [
+                    \Log::info('Order payment failed/cancelled, status changed to cancelled, stock restored', [
                         'order_id' => $orderId,
                         'status' => $transactionStatus
                     ]);
@@ -469,59 +469,5 @@ class CheckoutController extends Controller
                 'status' => $order->fresh()->status
             ]
         ]);
-    }
-    
-    /**
-     * Retry payment for unpaid order
-     */
-    public function retryPayment(Request $request, $orderId)
-    {
-        try {
-            $order = Order::where('id', $orderId)
-                ->where('user_id', Auth::id())
-                ->first();
-                
-            if (!$order) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Order not found or access denied'
-                ], 404);
-            }
-            
-            if (!$order->canRetryPayment()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Payment cannot be retried for this order. Current status: ' . $order->status_label
-                ], 422);
-            }
-            
-            // Generate new Snap Token
-            $midtransService = new \App\Services\MidtransService();
-            $snapToken = $midtransService->createSnapToken($order);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Payment retry token generated successfully',
-                'snap_token' => $snapToken,
-                'order' => [
-                    'id' => $order->id,
-                    'total_price' => $order->total_price,
-                    'status' => $order->status,
-                    'payment_status' => $order->payment_status
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Retry payment error', [
-                'order_id' => $orderId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to generate payment token. Please try again.'
-            ], 500);
-        }
     }
 }

@@ -97,12 +97,7 @@
                                             </button>
                                             @if(isset($order['id']))
                                                 {{-- Actions based on order status --}}
-                                                @if(($order['status'] ?? '') === 'unpaid')
-                                                    <button onclick="retryPayment('{{ $order['id'] }}')"
-                                                        class="px-3 py-1 rounded-md text-sm bg-yellow-100 text-yellow-700 hover:bg-yellow-200">
-                                                        Retry Payment
-                                                    </button>
-                                                @elseif(($order['status'] ?? '') === 'sending')
+                                                @if(($order['status'] ?? '') === 'sending')
                                                     <form action="{{ route('orders.mark-finished', $order['id']) }}" method="POST" class="inline">
                                                         @csrf
                                                         <button type="submit" 
@@ -302,14 +297,7 @@ function setupModalActions(order) {
     const status = order.status?.toLowerCase();
     const orderId = order.id;
     
-    if (status === 'unpaid') {
-        // Add retry payment button
-        const retryButton = document.createElement('button');
-        retryButton.onclick = () => retryPayment(orderId);
-        retryButton.className = 'px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md transition duration-200';
-        retryButton.textContent = 'Retry Payment';
-        actionsContainer.appendChild(retryButton);
-    } else if (status === 'sending') {
+    if (status === 'sending') {
         // Add finish order button
         const finishButton = document.createElement('button');
         finishButton.onclick = () => finishOrder(orderId);
@@ -350,65 +338,6 @@ function closeOrderModal() {
     document.getElementById('orderModal').classList.add('hidden');
 }
 
-// Retry payment function
-async function retryPayment(orderId) {
-    try {
-        const response = await fetch(`/orders/${orderId}/retry-payment`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.snap_token) {
-            // Open Midtrans payment popup
-            if (typeof window.snap !== 'undefined') {
-                window.snap.pay(data.snap_token, {
-                    onSuccess: function(result) {
-                        console.log('Payment success:', result);
-                        alert('Pembayaran berhasil!');
-                        location.reload();
-                    },
-                    onPending: function(result) {
-                        console.log('Payment pending:', result);
-                        alert('Pembayaran pending. Silakan selesaikan pembayaran Anda.');
-                        location.reload();
-                    },
-                    onError: function(result) {
-                        console.log('Payment error:', result);
-                        alert('Pembayaran gagal. Silakan coba lagi.');
-                    },
-                    onClose: function() {
-                        console.log('Payment popup closed');
-                        alert('Anda menutup popup pembayaran. Anda dapat mencoba lagi kapan saja.');
-                    }
-                });
-            } else {
-                console.error('Snap.js not loaded');
-                alert('Payment gateway sedang loading. Silakan coba lagi dalam beberapa detik.');
-                
-                // Load Snap.js dynamically
-                const script = document.createElement('script');
-                script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
-                script.setAttribute('data-client-key', '{{ config("midtrans.client_key") }}');
-                script.onload = function() {
-                    console.log('Snap.js loaded, retrying payment...');
-                    retryPayment(orderId);
-                };
-                document.head.appendChild(script);
-            }
-        } else {
-            alert(data.message || 'Gagal membuat token pembayaran');
-        }
-    } catch (error) {
-        console.error('Retry payment error:', error);
-        alert('Terjadi kesalahan. Silakan coba lagi.');
-    }
-}
-
 // Close modal when clicking outside
 document.getElementById('orderModal').addEventListener('click', function(e) {
     if (e.target === this) {
@@ -423,8 +352,5 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
-
-{{-- Load Midtrans Snap.js --}}
-<script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
 
 @endsection

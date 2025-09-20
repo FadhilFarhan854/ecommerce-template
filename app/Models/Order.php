@@ -68,14 +68,6 @@ class Order extends Model
     }
     
     /**
-     * Check if order can be paid/retried
-     */
-    public function canRetryPayment()
-    {
-        return $this->status === self::STATUS_UNPAID;
-    }
-    
-    /**
      * Check if order can be marked as sending by admin
      */
     public function canMarkAsSending()
