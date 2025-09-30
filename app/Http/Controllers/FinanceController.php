@@ -14,13 +14,14 @@ class FinanceController extends Controller
     {
         $outcomes = Outcome::orderBy('created_at', 'desc')->get();
         $totalOutcome = Outcome::sum('amount');
-        $totalIncome = Order::where('status', 'finished')->sum('total_price');
+        $totalIncome = Order::where('status', 'finished')->where('payment_status', 'paid')->sum('total_price');
         $netProfit = $totalIncome - $totalOutcome;
         
         // Current month and year data
-        $monthlyIncome = Order::whereYear('created_at', now()->year)
-            ->whereMonth('created_at', now()->month)
+        $monthlyIncome = Order::whereYear('updated_at', now()->year)
+            ->whereMonth('updated_at', now()->month)
             ->where('status', 'finished')
+            ->where('payment_status', 'paid')
             ->sum('total_price') ?? 0;
             
         $monthlyOutcome = Outcome::whereYear('created_at', now()->year)
@@ -29,8 +30,9 @@ class FinanceController extends Controller
             
         $monthlyProfit = $monthlyIncome - $monthlyOutcome;
         
-        $yearlyIncome = Order::whereYear('created_at', now()->year)
+        $yearlyIncome = Order::whereYear('updated_at', now()->year)
             ->where('status', 'finished')
+            ->where('payment_status', 'paid')
             ->sum('total_price') ?? 0;
             
         $yearlyOutcome = Outcome::whereYear('created_at', now()->year)
@@ -42,9 +44,10 @@ class FinanceController extends Controller
         $monthlyData = [];
         for ($i = 11; $i >= 0; $i--) {
             $date = now()->subMonths($i);
-            $income = Order::whereYear('created_at', $date->year)
-                ->whereMonth('created_at', $date->month)
+            $income = Order::whereYear('updated_at', $date->year)
+                ->whereMonth('updated_at', $date->month)
                 ->where('status', 'finished')
+                ->where('payment_status', 'paid')
                 ->sum('total_price') ?? 0;
             $outcome = Outcome::whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
@@ -57,7 +60,7 @@ class FinanceController extends Controller
             ];
         }
 
-        return view('finance.index', compact(
+        return view('Finance.index', compact(
             'outcomes', 'totalOutcome', 'totalIncome', 'netProfit', 
             'monthlyIncome', 'monthlyOutcome', 'monthlyProfit',
             'yearlyIncome', 'yearlyOutcome', 'yearlyProfit', 'monthlyData'
@@ -82,7 +85,7 @@ class FinanceController extends Controller
     public function edit($id)
     {
         $outcome = Outcome::findOrFail($id);
-        return view('finance.edit', compact('outcome'));
+        return view('Finance.edit', compact('outcome'));
     }
 
     public function update(Request $request, $id)
