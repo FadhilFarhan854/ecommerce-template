@@ -302,16 +302,30 @@ const statusData = @json($statusOrderChartData);
 const statusLabels = Object.keys(statusData);
 const statusValues = Object.values(statusData);
 
-// Define colors for different statuses
+// Define colors for different statuses with more vibrant and distinct colors
 const statusColors = {
-    'pending': '#f59e0b',
-    'processing': '#3b82f6',
-    'completed': '#10b981',
-    'cancelled': '#ef4444',
-    'shipped': '#8b5cf6'
+    'pending': '#f59e0b',      // Orange
+    'processing': '#3b82f6',    // Blue
+    'shipped': '#8b5cf6',       // Purple
+    'finished': '#10b981',      // Green
+    'cancelled': '#ef4444',     // Red
+    'failed': '#f97316',        // Dark Orange
+    'expired': '#6b7280'        // Gray
 };
 
-const backgroundColors = statusLabels.map(status => statusColors[status] || '#6b7280');
+// Create a more diverse color palette if we have statuses not in our predefined colors
+const additionalColors = ['#ec4899', '#14b8a6', '#f97316', '#84cc16', '#06b6d4', '#a855f7'];
+let colorIndex = 0;
+
+const backgroundColors = statusLabels.map(status => {
+    if (statusColors[status]) {
+        return statusColors[status];
+    } else {
+        const color = additionalColors[colorIndex % additionalColors.length];
+        colorIndex++;
+        return color;
+    }
+});
 
 // Create Status Chart
 const statusCtx = document.getElementById('statusChart').getContext('2d');

@@ -85,6 +85,21 @@ Link Website Sementara : https://ecommerce-parfum.exaapk.com/
         
 
 
+Laporan progres 22 September 2025 (98%)
+
+Link Website Sementara : https://ecommerce-parfum.exaapk.com/
+
+- [x] pembersihan code
+- [x] integrasi webhook midtrans
+- [x] perbaikan alur sistem order
+- [x] pengecekan terakhir
+        
+
+
+
+
+
+
 
 
 
